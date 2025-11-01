@@ -2,7 +2,6 @@ package ru.yandex.practicum.grpcserver.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;

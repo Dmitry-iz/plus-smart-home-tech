@@ -14,13 +14,12 @@ import ru.yandex.practicum.grpc.echo.EchoServiceGrpc;
 public class EchoSender {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @GrpcClient("echo") // внедрение с параметром "echo" — это отсылка к блоку конфигурации
+    @GrpcClient("echo")
     EchoServiceGrpc.EchoServiceBlockingStub echoService;
 
     @Scheduled(initialDelay = 1000, fixedDelay = 1000)
     public void echo() {
         log.info("echo send");
-        // отправка сообщения с помощью готового к использованию метода
         EchoResponse echoResponse = echoService.echo(EchoRequest.newBuilder().build());
         log.info("echo response received");
     }

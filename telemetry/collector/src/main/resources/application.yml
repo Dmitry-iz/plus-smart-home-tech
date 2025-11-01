@@ -1,6 +1,6 @@
 spring:
   application:
-    name: collector-ru.yandex.practicum.service
+    name: collector
 
   kafka:
     bootstrap-servers: localhost:9092
@@ -10,8 +10,12 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
 
-server:
-  port: 8080
+# ДОБАВЛЯЕМ gRPC конфигурацию
+grpc:
+  server:
+    port: 9090
+
+# УБИРАЕМ server.port так как теперь используем gRPC порт
 
 logging:
   level:
