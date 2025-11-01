@@ -83,8 +83,6 @@ import ru.yandex.practicum.service.SensorEventHandler;
 import com.google.protobuf.Empty;
 
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @GrpcService
@@ -94,14 +92,14 @@ public class CollectorGrpcService extends CollectorControllerGrpc.CollectorContr
     private final Map<SensorEventProto.PayloadCase, SensorEventHandler> sensorEventHandlers;
     private final GrpcToModelMapper grpcToModelMapper;
 
-    public CollectorGrpcService(Set<SensorEventHandler> sensorEventHandlers, GrpcToModelMapper grpcToModelMapper) {
-        this.grpcToModelMapper = grpcToModelMapper;
-        this.sensorEventHandlers = sensorEventHandlers.stream()
-                .collect(Collectors.toMap(
-                        SensorEventHandler::getMessageType,
-                        handler -> handler
-                ));
-    }
+//    public CollectorGrpcService(Set<SensorEventHandler> sensorEventHandlers, GrpcToModelMapper grpcToModelMapper) {
+//        this.grpcToModelMapper = grpcToModelMapper;
+//        this.sensorEventHandlers = sensorEventHandlers.stream()
+//                .collect(Collectors.toMap(
+//                        SensorEventHandler::getMessageType,
+//                        handler -> handler
+//                ));
+//    }
 
     @Override
     public void sendSensorEvent(SensorEventProto request, StreamObserver<Empty> responseObserver) {
