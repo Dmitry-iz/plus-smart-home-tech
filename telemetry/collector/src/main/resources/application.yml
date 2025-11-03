@@ -13,7 +13,7 @@ spring:
 # ДОБАВЛЯЕМ gRPC конфигурацию
 grpc:
   server:
-    port: 9090
+    port: 59091
 
 # УБИРАЕМ server.port так как теперь используем gRPC порт
 
