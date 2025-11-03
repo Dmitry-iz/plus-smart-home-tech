@@ -8,6 +8,7 @@
 //import ru.yandex.practicum.grpc.telemetry.collector.CollectorControllerGrpc;
 //import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
 //import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
+//import ru.yandex.practicum.service.KafkaProducerService;
 //import ru.yandex.practicum.service.SensorEventHandler;
 //import com.google.protobuf.Empty;
 //
@@ -20,68 +21,7 @@
 //
 //    private final Map<SensorEventProto.PayloadCase, SensorEventHandler> sensorEventHandlers;
 //    private final GrpcToModelMapper grpcToModelMapper;
-//
-//    @Override
-//    public void sendSensorEvent(SensorEventProto request, StreamObserver<Empty> responseObserver) {
-//        try {
-//            log.info("Received sensor event via gRPC: {}", request.getId());
-//
-//            // Используем обработчики как в задании
-//            if (sensorEventHandlers.containsKey(request.getPayloadCase())) {
-//                sensorEventHandlers.get(request.getPayloadCase()).handle(request);
-//            } else {
-//                throw new IllegalArgumentException("Не могу найти обработчик для события " + request.getPayloadCase());
-//            }
-//
-//            responseObserver.onNext(Empty.getDefaultInstance());
-//            responseObserver.onCompleted();
-//        } catch (Exception e) {
-//            log.error("Failed to process sensor event via gRPC: {}", request, e);
-//            responseObserver.onError(new StatusRuntimeException(io.grpc.Status.fromThrowable(e)));
-//        }
-//    }
-//
-//    @Override
-//    public void sendHubEvent(HubEventProto request, StreamObserver<Empty> responseObserver) {
-//        try {
-//            log.info("Received hub event via gRPC: {}", request.getHubId());
-//
-//            // Для hub events пока используем старый подход
-//            var hubEvent = grpcToModelMapper.toHubEvent(request);
-//            // Здесь нужно будет добавить HubEventHandlers аналогично SensorEventHandlers
-//
-//            responseObserver.onNext(Empty.getDefaultInstance());
-//            responseObserver.onCompleted();
-//        } catch (Exception e) {
-//            log.error("Failed to process hub event via gRPC: {}", request, e);
-//            responseObserver.onError(new StatusRuntimeException(io.grpc.Status.fromThrowable(e)));
-//        }
-//    }
-//}
-
-//
-//package ru.yandex.practicum.grpc;
-//
-//import io.grpc.StatusRuntimeException;
-//import io.grpc.stub.StreamObserver;
-//import lombok.RequiredArgsConstructor;
-//import lombok.extern.slf4j.Slf4j;
-//import net.devh.boot.grpc.server.service.GrpcService;
-//import ru.yandex.practicum.grpc.telemetry.collector.CollectorControllerGrpc;
-//import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
-//import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
-//import ru.yandex.practicum.service.SensorEventHandler;
-//import com.google.protobuf.Empty;
-//
-//import java.util.Map;
-//
-//@Slf4j
-//@GrpcService
-//@RequiredArgsConstructor
-//public class CollectorGrpcService extends CollectorControllerGrpc.CollectorControllerImplBase {
-//
-//    private final Map<SensorEventProto.PayloadCase, SensorEventHandler> sensorEventHandlers;
-//    private final GrpcToModelMapper grpcToModelMapper;
+//    private final KafkaProducerService kafkaProducerService; // Добавьте это
 //
 //    @Override
 //    public void collectSensorEvent(SensorEventProto request, StreamObserver<Empty> responseObserver) {
@@ -107,9 +47,9 @@
 //        try {
 //            log.info("Received hub event via gRPC: {}", request.getHubId());
 //
-//            // Для hub events пока используем старый подход
+//            // Конвертируем и отправляем в Kafka
 //            var hubEvent = grpcToModelMapper.toHubEvent(request);
-//            // Здесь нужно будет добавить HubEventHandlers аналогично SensorEventHandlers
+//            kafkaProducerService.sendHubEvent(hubEvent); // Добавьте эту строку
 //
 //            responseObserver.onNext(Empty.getDefaultInstance());
 //            responseObserver.onCompleted();
@@ -125,7 +65,6 @@ package ru.yandex.practicum.grpc;
 
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import ru.yandex.practicum.grpc.telemetry.collector.CollectorControllerGrpc;
@@ -136,15 +75,32 @@ import ru.yandex.practicum.service.SensorEventHandler;
 import com.google.protobuf.Empty;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @GrpcService
-@RequiredArgsConstructor
 public class CollectorGrpcService extends CollectorControllerGrpc.CollectorControllerImplBase {
 
     private final Map<SensorEventProto.PayloadCase, SensorEventHandler> sensorEventHandlers;
     private final GrpcToModelMapper grpcToModelMapper;
-    private final KafkaProducerService kafkaProducerService; // Добавьте это
+    private final KafkaProducerService kafkaProducerService;
+
+    // ИЗМЕНИТЕ КОНСТРУКТОР - принимаем Set, а не Map
+    public CollectorGrpcService(Set<SensorEventHandler> sensorEventHandlers,
+                                GrpcToModelMapper grpcToModelMapper,
+                                KafkaProducerService kafkaProducerService) {
+        this.grpcToModelMapper = grpcToModelMapper;
+        this.kafkaProducerService = kafkaProducerService;
+
+        // Преобразуем Set в Map как указано в ТЗ
+        this.sensorEventHandlers = sensorEventHandlers.stream()
+                .collect(Collectors.toMap(
+                        SensorEventHandler::getMessageType,
+                        Function.identity()
+                ));
+    }
 
     @Override
     public void collectSensorEvent(SensorEventProto request, StreamObserver<Empty> responseObserver) {
@@ -170,9 +126,8 @@ public class CollectorGrpcService extends CollectorControllerGrpc.CollectorContr
         try {
             log.info("Received hub event via gRPC: {}", request.getHubId());
 
-            // Конвертируем и отправляем в Kafka
             var hubEvent = grpcToModelMapper.toHubEvent(request);
-            kafkaProducerService.sendHubEvent(hubEvent); // Добавьте эту строку
+            kafkaProducerService.sendHubEvent(hubEvent);
 
             responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
