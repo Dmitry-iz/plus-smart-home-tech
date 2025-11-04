@@ -23,7 +23,6 @@ public class MotionSensorEventHandler implements SensorEventHandler {
     public void handle(SensorEventProto event) {
         log.info("Processing motion sensor event from device: {}", event.getId());
 
-        // Конвертируем и отправляем в Kafka
         var sensorEvent = grpcToModelMapper.toSensorEvent(event);
         kafkaProducerService.sendSensorEvent(sensorEvent);
     }

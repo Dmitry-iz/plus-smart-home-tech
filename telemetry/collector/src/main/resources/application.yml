@@ -10,12 +10,10 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
 
-# ДОБАВЛЯЕМ gRPC конфигурацию
 grpc:
   server:
     port: 59091
 
-# УБИРАЕМ server.port так как теперь используем gRPC порт
 
 logging:
   level:
