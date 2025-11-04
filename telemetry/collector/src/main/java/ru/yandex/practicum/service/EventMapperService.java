@@ -276,4 +276,15 @@ public class EventMapperService {
 
         return builder.build();
     }
+
+    public byte[] snapshotToAvroBytes(SensorsSnapshotAvro snapshot) {
+        try {
+            byte[] result = serializeAvro(snapshot, SensorsSnapshotAvro.getClassSchema());
+            log.debug("Converted snapshot to {} bytes", result.length);
+            return result;
+        } catch (Exception e) {
+            log.error("Failed to convert snapshot to Avro: {}", snapshot, e);
+            throw new RuntimeException("Failed to convert snapshot to Avro", e);
+        }
+    }
 }
