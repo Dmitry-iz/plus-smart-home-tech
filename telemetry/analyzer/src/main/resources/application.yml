@@ -2,9 +2,9 @@ spring:
   application:
     name: analyzer
   datasource:
-    url: jdbc:postgresql://localhost:5432/smart_home
+    url: jdbc:postgresql://localhost:5432/analyzer
     username: postgres
-    password: password
+    password: postgres
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -15,7 +15,7 @@ spring:
         format_sql: true
   sql:
     init:
-      mode: always
+      mode: never
 
   kafka:
     bootstrap-servers: localhost:9092
