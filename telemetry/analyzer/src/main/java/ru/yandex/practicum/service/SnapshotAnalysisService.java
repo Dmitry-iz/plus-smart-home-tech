@@ -6,11 +6,13 @@ import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.entity.Scenario;
 import ru.yandex.practicum.kafka.telemetry.event.SensorsSnapshotAvro;
 import ru.yandex.practicum.repository.ScenarioRepository;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -21,28 +23,14 @@ public class SnapshotAnalysisService {
     private final ScenarioExecutionService scenarioExecutionService;
     private final DecoderFactory decoderFactory = DecoderFactory.get();
 
-    public void analyzeSnapshot(byte[] snapshotData) {
-        try {
-            SensorsSnapshotAvro snapshot = deserializeSnapshot(snapshotData);
-            String hubId = snapshot.getHubId();
+    public void analyzeSnapshot(SensorsSnapshotAvro snapshot) {
+        String hubId = snapshot.getHubId();
+        log.info("=== STARTING SNAPSHOT ANALYSIS ===");
 
-            // Загружаем сценарии для данного хаба
-            var scenarios = scenarioRepository.findByHubId(hubId);
+        List<Scenario> scenarios = scenarioRepository.findByHubId(hubId);
+        log.info("Found {} scenarios for hub: {}", scenarios.size(), hubId);
 
-            if (scenarios.isEmpty()) {
-                log.debug("No scenarios found for hub: {}", hubId);
-                return;
-            }
-
-            log.info("Analyzing snapshot for hub: {} with {} scenarios",
-                    hubId, scenarios.size());
-
-            // Проверяем условия сценариев и выполняем действия
-            scenarioExecutionService.executeScenarios(snapshot, scenarios);
-
-        } catch (Exception e) {
-            log.error("Failed to analyze snapshot", e);
-        }
+        scenarioExecutionService.executeScenarios(snapshot, scenarios);
     }
 
     private SensorsSnapshotAvro deserializeSnapshot(byte[] data) throws IOException {

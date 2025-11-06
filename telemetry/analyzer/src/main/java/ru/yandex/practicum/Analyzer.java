@@ -19,15 +19,12 @@ public class Analyzer {
         final HubEventProcessor hubEventProcessor = context.getBean(HubEventProcessor.class);
         SnapshotProcessor snapshotProcessor = context.getBean(SnapshotProcessor.class);
 
-        // Запускаем в отдельном потоке обработчик событий хабов
         Thread hubEventsThread = new Thread(hubEventProcessor);
         hubEventsThread.setName("HubEventHandlerThread");
         hubEventsThread.start();
 
-        // В текущем потоке начинаем обработку снапшотов
         snapshotProcessor.start();
 
-        // Регистрируем хук для graceful shutdown
         registerShutdownHook(context, hubEventProcessor, snapshotProcessor);
     }
 

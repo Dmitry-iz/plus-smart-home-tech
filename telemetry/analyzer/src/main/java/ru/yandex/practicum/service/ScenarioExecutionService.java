@@ -4,7 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.entity.*;
+import org.springframework.transaction.annotation.Transactional;
+
+import ru.yandex.practicum.entity.Action;
+import ru.yandex.practicum.entity.Scenario;
+import ru.yandex.practicum.entity.ScenarioAction;
+import ru.yandex.practicum.entity.ScenarioCondition;
+import ru.yandex.practicum.entity.Sensor;
 import ru.yandex.practicum.grpc.telemetry.event.ActionTypeProto;
 import ru.yandex.practicum.grpc.telemetry.event.DeviceActionProto;
 import ru.yandex.practicum.grpc.telemetry.hubrouter.DeviceActionRequest;
@@ -20,6 +26,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ScenarioExecutionService {
 
     @GrpcClient("hub-router")
@@ -31,17 +38,28 @@ public class ScenarioExecutionService {
 
     public void executeScenarios(SensorsSnapshotAvro snapshot, List<Scenario> scenarios) {
         String hubId = snapshot.getHubId();
+        log.info("=== ANALYZING SNAPSHOT FOR HUB: {} ===", hubId);
+        log.info("Found {} scenarios to check", scenarios.size());
 
         for (Scenario scenario : scenarios) {
             try {
-                // Загружаем условия для сценария
-                List<ScenarioCondition> conditions = scenarioConditionRepository.findByIdScenarioId(scenario.getId());
+                log.info("Checking scenario: {} for hub: {}", scenario.getName(), hubId);
 
-                if (conditionEvaluationService.evaluateAllConditions(snapshot, conditions)) {
+                List<ScenarioCondition> conditions = scenarioConditionRepository
+                        .findWithAssociationsByIdScenarioId(scenario.getId());
+                log.info("Loaded {} conditions for scenario: {}", conditions.size(), scenario.getName());
+
+                if (conditions.isEmpty()) {
+                    log.warn("No conditions found for scenario: {}", scenario.getName());
+                    continue;
+                }
+
+                boolean conditionsMet = conditionEvaluationService.evaluateAllConditions(snapshot, conditions);
+                log.info("Conditions met for scenario {}: {}", scenario.getName(), conditionsMet);
+
+                if (conditionsMet) {
+                    log.info("EXECUTING SCENARIO: {} for hub: {}", scenario.getName(), hubId);
                     executeScenarioActions(hubId, scenario);
-                    log.info("Executed scenario: {} for hub: {}", scenario.getName(), hubId);
-                } else {
-                    log.debug("Conditions not met for scenario: {}", scenario.getName());
                 }
             } catch (Exception e) {
                 log.error("Error executing scenario: {} for hub: {}", scenario.getName(), hubId, e);
@@ -51,15 +69,16 @@ public class ScenarioExecutionService {
 
     private void executeScenarioActions(String hubId, Scenario scenario) {
         try {
-            // Загружаем действия для сценария
-            List<ScenarioAction> scenarioActions = scenarioActionRepository.findByIdScenarioId(scenario.getId());
+            List<ScenarioAction> scenarioActions = scenarioActionRepository
+                    .findWithAssociationsByIdScenarioId(scenario.getId());
+            log.info("Executing {} actions for scenario: {} on hub: {}",
+                    scenarioActions.size(), scenario.getName(), hubId);
 
             if (scenarioActions.isEmpty()) {
                 log.warn("No actions found for scenario: {}", scenario.getName());
                 return;
             }
 
-            // Выполняем каждое действие
             for (ScenarioAction scenarioAction : scenarioActions) {
                 executeSingleAction(hubId, scenario.getName(), scenarioAction);
             }
@@ -79,6 +98,9 @@ public class ScenarioExecutionService {
                 return;
             }
 
+            log.info("Sending action to Hub Router - Hub: {}, Scenario: {}, Sensor: {}, Action: {}",
+                    hubId, scenarioName, sensor.getId(), action.getType());
+
             DeviceActionProto actionProto = DeviceActionProto.newBuilder()
                     .setSensorId(sensor.getId())
                     .setType(mapActionType(action.getType()))
@@ -96,11 +118,11 @@ public class ScenarioExecutionService {
                     .build();
 
             hubRouterClient.handleDeviceAction(request);
-            log.debug("Sent device action for scenario: {}, sensor: {}, action: {}",
+            log.info("SUCCESS: Sent device action for scenario: {}, sensor: {}, action: {}",
                     scenarioName, sensor.getId(), action.getType());
 
         } catch (Exception e) {
-            log.error("Failed to send device action for scenario: {}, sensor: {}",
+            log.error("FAILED to send device action for scenario: {}, sensor: {}",
                     scenarioName, scenarioAction.getSensor().getId(), e);
         }
     }
@@ -111,10 +133,14 @@ public class ScenarioExecutionService {
         }
 
         switch (actionType.toUpperCase()) {
-            case "ACTIVATE": return ActionTypeProto.ACTIVATE;
-            case "DEACTIVATE": return ActionTypeProto.DEACTIVATE;
-            case "INVERSE": return ActionTypeProto.INVERSE;
-            case "SET_VALUE": return ActionTypeProto.SET_VALUE;
+            case "ACTIVATE":
+                return ActionTypeProto.ACTIVATE;
+            case "DEACTIVATE":
+                return ActionTypeProto.DEACTIVATE;
+            case "INVERSE":
+                return ActionTypeProto.INVERSE;
+            case "SET_VALUE":
+                return ActionTypeProto.SET_VALUE;
             default:
                 log.warn("Unknown action type: {}, defaulting to ACTIVATE", actionType);
                 return ActionTypeProto.ACTIVATE;
