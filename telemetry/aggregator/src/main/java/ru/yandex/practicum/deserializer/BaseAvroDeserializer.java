@@ -17,7 +17,6 @@ public class BaseAvroDeserializer<T extends SpecificRecordBase> implements Deser
     private final DecoderFactory decoderFactory;
     private final Schema schema;
 
-    // Убираем @RequiredArgsConstructor и создаем конструкторы вручную
     public BaseAvroDeserializer(Schema schema) {
         this(DecoderFactory.get(), schema);
     }

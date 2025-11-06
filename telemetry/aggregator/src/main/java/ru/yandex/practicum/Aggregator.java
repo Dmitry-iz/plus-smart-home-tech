@@ -11,10 +11,8 @@ import ru.yandex.practicum.service.AggregationStarter;
 public class Aggregator {
 
     public static void main(String[] args) {
-        // Запуск Spring Boot приложения
         ConfigurableApplicationContext context = SpringApplication.run(Aggregator.class, args);
 
-        // Получаем бин AggregationStarter из контекста и запускаем основную логику сервиса
         AggregationStarter aggregator = context.getBean(AggregationStarter.class);
         aggregator.start();
     }
