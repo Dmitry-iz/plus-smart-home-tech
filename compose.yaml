@@ -46,5 +46,22 @@ services:
                              --bootstrap-server kafka:29092'"
     init: true
 
+  postgres-schema-init:
+    image: postgres:13
+    container_name: postgres-schema-init
+    depends_on:
+      - postgres
+    command: |
+      bash -c "
+        echo 'Waiting for PostgreSQL to be ready...'
+        sleep 10
+        echo 'Creating schemas for commerce services...'
+        PGPASSWORD=postgres psql -h postgres -U postgres -d analyzer -c 'CREATE SCHEMA IF NOT EXISTS shopping_store;'
+        PGPASSWORD=postgres psql -h postgres -U postgres -d analyzer -c 'CREATE SCHEMA IF NOT EXISTS shopping_cart;'
+        PGPASSWORD=postgres psql -h postgres -U postgres -d analyzer -c 'CREATE SCHEMA IF NOT EXISTS warehouse;'
+        echo 'Commerce schemas created successfully'
+      "
+    restart: on-failure
+
 volumes:
   postgres_data:
