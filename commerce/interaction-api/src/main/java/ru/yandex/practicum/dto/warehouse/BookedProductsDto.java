@@ -7,10 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddressDto {
-    private String country;
-    private String city;
-    private String street;
-    private String house;
-    private String flat;
+public class BookedProductsDto {
+    private Double deliveryVolume;
+    private Double deliveryWeight;
+    private Boolean fragile;
 }

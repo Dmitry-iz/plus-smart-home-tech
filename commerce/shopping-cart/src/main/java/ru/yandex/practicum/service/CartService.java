@@ -39,6 +39,44 @@ public class CartService {
         return shoppingCartMapper.toDto(cart);
     }
 
+//    @Transactional
+//    public ShoppingCartDto addProductsToCart(String username, Map<UUID, Integer> products) {
+//        validateUsername(username);
+//        log.info("Adding products to cart for user: {}, products: {}", username, products);
+//
+//        Cart cart = cartRepository.findActiveCartWithItems(username)
+//                .orElseGet(() -> createNewCart(username));
+//
+//        // Добавляем или обновляем товары в корзине
+//        for (Map.Entry<UUID, Integer> entry : products.entrySet()) {
+//            UUID productId = entry.getKey();
+//            Integer quantity = entry.getValue();
+//
+//            cartItemRepository.findByCartShoppingCartIdAndProductId(cart.getShoppingCartId(), productId)
+//                    .ifPresentOrElse(
+//                            cartItem -> {
+//                                // Обновляем количество если товар уже есть
+//                                cartItem.setQuantity(cartItem.getQuantity() + quantity);
+//                                cartItemRepository.save(cartItem);
+//                            },
+//                            () -> {
+//                                // Добавляем новый товар
+//                                CartItem newItem = new CartItem();
+//                                newItem.setCart(cart);
+//                                newItem.setProductId(productId);
+//                                newItem.setQuantity(quantity);
+//                                cartItemRepository.save(newItem);
+//                            }
+//                    );
+//        }
+//
+//        // Обновляем корзину
+//        Cart updatedCart = cartRepository.findActiveCartWithItems(username)
+//                .orElseThrow(() -> new CartNotFoundException(username, cart.getShoppingCartId()));
+//
+//        return shoppingCartMapper.toDto(updatedCart);
+//    }
+
     @Transactional
     public ShoppingCartDto addProductsToCart(String username, Map<UUID, Integer> products) {
         validateUsername(username);
@@ -47,30 +85,30 @@ public class CartService {
         Cart cart = cartRepository.findActiveCartWithItems(username)
                 .orElseGet(() -> createNewCart(username));
 
-        // Добавляем или обновляем товары в корзине
+        // ИСПРАВЛЕНИЕ: Добавляем товары к существующим, а не заменяем
         for (Map.Entry<UUID, Integer> entry : products.entrySet()) {
             UUID productId = entry.getKey();
-            Integer quantity = entry.getValue();
+            Integer quantityToAdd = entry.getValue();
 
             cartItemRepository.findByCartShoppingCartIdAndProductId(cart.getShoppingCartId(), productId)
                     .ifPresentOrElse(
                             cartItem -> {
-                                // Обновляем количество если товар уже есть
-                                cartItem.setQuantity(cartItem.getQuantity() + quantity);
+                                // Если товар уже есть - УВЕЛИЧИВАЕМ количество
+                                cartItem.setQuantity(cartItem.getQuantity() + quantityToAdd);
                                 cartItemRepository.save(cartItem);
                             },
                             () -> {
-                                // Добавляем новый товар
+                                // Если товара нет - добавляем новый
                                 CartItem newItem = new CartItem();
                                 newItem.setCart(cart);
                                 newItem.setProductId(productId);
-                                newItem.setQuantity(quantity);
+                                newItem.setQuantity(quantityToAdd);
                                 cartItemRepository.save(newItem);
                             }
                     );
         }
 
-        // Обновляем корзину
+        // Получаем обновленную корзину
         Cart updatedCart = cartRepository.findActiveCartWithItems(username)
                 .orElseThrow(() -> new CartNotFoundException(username, cart.getShoppingCartId()));
 

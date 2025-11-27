@@ -6,7 +6,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.client.ShoppingStoreClient;
 import ru.yandex.practicum.dto.common.PageResponse;
@@ -14,8 +13,10 @@ import ru.yandex.practicum.dto.shoppingstore.ProductDto;
 import ru.yandex.practicum.dto.shoppingstore.SetProductQuantityStateRequest;
 import ru.yandex.practicum.service.ProductService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -27,7 +28,7 @@ public class ShoppingStoreController implements ShoppingStoreClient {
 
     @Override
     @GetMapping
-    public List<ProductDto> getProductsByCategory(
+    public PageResponse<ProductDto> getProductsByCategory(
             @RequestParam("category") String category,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
@@ -36,29 +37,19 @@ public class ShoppingStoreController implements ShoppingStoreClient {
         Pageable pageable = createPageable(page, size, sort);
         Page<ProductDto> productsPage = productService.getProductsByCategory(category, pageable);
 
-        return productsPage.getContent(); // Возвращаем только список
+        // Преобразуем Spring Page в наш PageResponse
+        List<PageResponse.SortInfo> sortInfo = convertSort(pageable.getSort());
+
+        return new PageResponse<>(
+                productsPage.getContent(),
+                productsPage.getNumber(),
+                productsPage.getSize(),
+                productsPage.getTotalElements(),
+                productsPage.getTotalPages(),
+                productsPage.isLast(),
+                sortInfo
+        );
     }
-//    @GetMapping
-//    public ResponseEntity<PageResponse<ProductDto>> getProductsByCategory(
-//            @RequestParam("category") String category,
-//            @RequestParam(value = "page", defaultValue = "0") int page,
-//            @RequestParam(value = "size", defaultValue = "20") int size,
-//            @RequestParam(value = "sort", required = false) List<String> sort) {
-//
-//        Pageable pageable = createPageable(page, size, sort);
-//        Page<ProductDto> productsPage = productService.getProductsByCategory(category, pageable);
-//
-//        PageResponse<ProductDto> response = new PageResponse<>(
-//                productsPage.getContent(),
-//                productsPage.getNumber(),
-//                productsPage.getSize(),
-//                productsPage.getTotalElements(),
-//                productsPage.getTotalPages(),
-//                productsPage.isLast()
-//        );
-//
-//        return ResponseEntity.ok(response);
-//    }
 
     @Override
     @GetMapping("/{productId}")
@@ -84,21 +75,18 @@ public class ShoppingStoreController implements ShoppingStoreClient {
         return productService.removeProductFromStore(productId);
     }
 
-    // РЕАЛИЗАЦИЯ ДЛЯ FEIGN CLIENT - только JSON
+    // Основной метод для Feign (JSON)
     @Override
     @PostMapping("/quantityState")
     public Boolean setQuantityState(@RequestBody SetProductQuantityStateRequest request) {
         return productService.setQuantityState(request);
     }
 
-    // ОТДЕЛЬНЫЙ ENDPOINT ДЛЯ ТЕСТОВ С ПАРАМЕТРАМИ URL
+    // Дополнительный метод для тестов (URL параметры)
     @PostMapping(value = "/quantityState", params = {"productId", "quantityState"})
-    public Boolean setQuantityStateFromUrl(
+    public Boolean setQuantityStateFromParams(
             @RequestParam("productId") UUID productId,
             @RequestParam("quantityState") String quantityState) {
-
-        log.info("Setting quantity state from URL params - productId: {}, quantityState: {}",
-                productId, quantityState);
 
         SetProductQuantityStateRequest request = new SetProductQuantityStateRequest();
         request.setProductId(productId);
@@ -128,4 +116,42 @@ public class ShoppingStoreController implements ShoppingStoreClient {
 
         return PageRequest.of(page, size, direction, sortField);
     }
+
+//    private Pageable createPageable(int page, int size, List<String> sort) {
+//        if (sort == null || sort.isEmpty()) {
+//            return PageRequest.of(page, size);
+//        }
+//
+//        List<Sort.Order> orders = new ArrayList<>();
+//
+//        for (String sortParam : sort) {
+//            if (sortParam.contains(",")) {
+//                String[] parts = sortParam.split(",");
+//                String field = parts[0].trim();
+//                Sort.Direction direction = parts.length > 1 ?
+//                        Sort.Direction.fromString(parts[1].trim().toUpperCase()) :
+//                        Sort.Direction.ASC;
+//                orders.add(new Sort.Order(direction, field));
+//            } else {
+//                orders.add(new Sort.Order(Sort.Direction.ASC, sortParam.trim()));
+//            }
+//        }
+//
+//        return PageRequest.of(page, size, Sort.by(orders));
+//    }
+
+    private List<PageResponse.SortInfo> convertSort(Sort sort) {
+        return sort.stream()
+                .map(order -> new PageResponse.SortInfo(order.getProperty(), order.getDirection().name()))
+                .collect(Collectors.toList());
+    }
+
+//    private List<PageResponse.SortInfo> convertSort(Sort sort) {
+//        return sort.stream()
+//                .map(order -> new PageResponse.SortInfo(
+//                        order.getProperty(),
+//                        order.getDirection().name() // Должно возвращать "DESC" для нисходящей сортировки
+//                ))
+//                .collect(Collectors.toList());
+//    }
 }

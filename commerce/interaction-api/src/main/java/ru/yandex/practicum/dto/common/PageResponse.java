@@ -16,4 +16,13 @@ public class PageResponse<T> {
     private long totalElements;
     private int totalPages;
     private boolean last;
+    private List<SortInfo> sort;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SortInfo {
+        private String property;
+        private String direction;
+    }
 }

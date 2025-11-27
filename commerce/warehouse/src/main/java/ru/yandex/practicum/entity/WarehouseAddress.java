@@ -26,7 +26,7 @@ public class WarehouseAddress {
     @Column(nullable = false)
     private String house;
 
-    private String apartment;
+    private String apartment; // Оставляем как есть в entity
 
     // Статический метод для получения случайного адреса как в ТЗ
     public static WarehouseAddress getRandomAddress() {
