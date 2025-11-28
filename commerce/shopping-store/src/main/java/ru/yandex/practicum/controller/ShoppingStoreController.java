@@ -117,6 +117,33 @@ public class ShoppingStoreController implements ShoppingStoreClient {
 //        return PageRequest.of(page, size, Sort.by(orders));
 //    }
 
+//    private Pageable createPageable(int page, int size, List<String> sort) {
+//        log.info("Creating pageable - page: {}, size: {}, sort: {}", page, size, sort);
+//
+//        if (sort == null || sort.isEmpty()) {
+//            return PageRequest.of(page, size);
+//        }
+//
+//        // Простая обработка для отладки
+//        for (String sortParam : sort) {
+//            log.info("Processing sort param: {}", sortParam);
+//            try {
+//                String[] parts = sortParam.split(",");
+//                String field = parts[0].trim();
+//                Sort.Direction direction = parts.length > 1 ?
+//                        Sort.Direction.fromString(parts[1].trim()) : Sort.Direction.ASC;
+//
+//                log.info("Parsed - field: {}, direction: {}", field, direction);
+//                return PageRequest.of(page, size, direction, field);
+//
+//            } catch (Exception e) {
+//                log.error("Error parsing sort: {}", sortParam, e);
+//            }
+//        }
+//
+//        return PageRequest.of(page, size);
+//    }
+
     private Pageable createPageable(int page, int size, List<String> sort) {
         log.info("Creating pageable - page: {}, size: {}, sort: {}", page, size, sort);
 
@@ -124,24 +151,29 @@ public class ShoppingStoreController implements ShoppingStoreClient {
             return PageRequest.of(page, size);
         }
 
-        // Простая обработка для отладки
-        for (String sortParam : sort) {
-            log.info("Processing sort param: {}", sortParam);
-            try {
-                String[] parts = sortParam.split(",");
-                String field = parts[0].trim();
-                Sort.Direction direction = parts.length > 1 ?
-                        Sort.Direction.fromString(parts[1].trim()) : Sort.Direction.ASC;
+        try {
+            // Postman отправляет: ["productName", "DESC"] - это List из двух элементов!
+            log.info("Sort list size: {}", sort.size());
 
-                log.info("Parsed - field: {}, direction: {}", field, direction);
-                return PageRequest.of(page, size, direction, field);
+            if (sort.size() >= 2) {
+                String field = sort.get(0).trim();
+                String directionStr = sort.get(1).trim();
 
-            } catch (Exception e) {
-                log.error("Error parsing sort: {}", sortParam, e);
+                log.info("Parsed - field: '{}', direction: '{}'", field, directionStr);
+
+                Sort.Direction direction = Sort.Direction.fromString(directionStr);
+                Sort sortObj = Sort.by(direction, field);
+
+                return PageRequest.of(page, size, sortObj);
+            } else {
+                log.warn("Not enough sort parameters, using default");
+                return PageRequest.of(page, size);
             }
-        }
 
-        return PageRequest.of(page, size);
+        } catch (Exception e) {
+            log.error("Error creating pageable: {}", e.getMessage(), e);
+            return PageRequest.of(page, size);
+        }
     }
 
 

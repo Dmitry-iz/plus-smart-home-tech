@@ -80,22 +80,138 @@ public class CartService {
 //        return shoppingCartMapper.toDto(updatedCart);
 //    }
 
+//    @Transactional
+//    public ShoppingCartDto addProductsToCart(String username, Map<String, Integer> products) { // Меняем UUID на String!
+//        validateUsername(username);
+//        log.info("Adding products to cart for user: {}, products: {}", username, products);
+//
+//        Cart cart = cartRepository.findActiveCartWithItems(username)
+//                .orElseGet(() -> createNewCart(username));
+//
+//        // Конвертируем String ключи в UUID
+//        for (Map.Entry<String, Integer> entry : products.entrySet()) {
+//            UUID productId;
+//            try {
+//                productId = UUID.fromString(entry.getKey());
+//            } catch (IllegalArgumentException e) {
+//                log.error("Invalid UUID format: {}", entry.getKey());
+//                continue; // или выбросить исключение
+//            }
+//
+//            Integer targetQuantity = entry.getValue();
+//
+//            cartItemRepository.findByCartShoppingCartIdAndProductId(cart.getShoppingCartId(), productId)
+//                    .ifPresentOrElse(
+//                            cartItem -> {
+//                                cartItem.setQuantity(targetQuantity);
+//                                cartItemRepository.save(cartItem);
+//                            },
+//                            () -> {
+//                                CartItem newItem = new CartItem();
+//                                newItem.setCart(cart);
+//                                newItem.setProductId(productId);
+//                                newItem.setQuantity(targetQuantity);
+//                                cartItemRepository.save(newItem);
+//                            }
+//                    );
+//        }
+//
+//        Cart updatedCart = cartRepository.findActiveCartWithItems(username)
+//                .orElseThrow(() -> new CartNotFoundException(username, cart.getShoppingCartId()));
+//
+//        return shoppingCartMapper.toDto(updatedCart);
+//    }
+
+
+//    @Transactional
+//    public ShoppingCartDto addProductsToCart(String username, Map<String, Integer> products) {
+//        validateUsername(username);
+//
+//        log.info("=== CART DEBUG START ===");
+//        log.info("Username: {}", username);
+//        log.info("Received products map: {}", products);
+//        log.info("Map size: {}", products.size());
+//        log.info("Map type: {}", products.getClass().getName());
+//
+//        if (products != null && !products.isEmpty()) {
+//            for (Map.Entry<String, Integer> entry : products.entrySet()) {
+//                log.info("Key: '{}' (type: {}), Value: {} (type: {})",
+//                        entry.getKey(), entry.getKey().getClass().getSimpleName(),
+//                        entry.getValue(), entry.getValue().getClass().getSimpleName());
+//
+//                try {
+//                    UUID productId = UUID.fromString(entry.getKey());
+//                    log.info("Successfully parsed UUID: {}", productId);
+//                } catch (Exception e) {
+//                    log.error("Failed to parse UUID from: '{}'", entry.getKey(), e);
+//                }
+//            }
+//        } else {
+//            log.warn("Products map is null or empty!");
+//        }
+//        log.info("=== CART DEBUG END ===");
+//
+//        Cart cart = cartRepository.findActiveCartWithItems(username)
+//                .orElseGet(() -> createNewCart(username));
+//
+//        int processedItems = 0;
+//        for (Map.Entry<String, Integer> entry : products.entrySet()) {
+//            UUID productId;
+//            try {
+//                productId = UUID.fromString(entry.getKey());
+//            } catch (IllegalArgumentException e) {
+//                log.error("Invalid UUID format: {}", entry.getKey());
+//                continue;
+//            }
+//
+//            Integer targetQuantity = entry.getValue();
+//            log.info("Processing product: {} -> {}", productId, targetQuantity);
+//
+//            cartItemRepository.findByCartShoppingCartIdAndProductId(cart.getShoppingCartId(), productId)
+//                    .ifPresentOrElse(
+//                            cartItem -> {
+//                                log.info("Updating existing item: {} from {} to {}",
+//                                        productId, cartItem.getQuantity(), targetQuantity);
+//                                cartItem.setQuantity(targetQuantity);
+//                                cartItemRepository.save(cartItem);
+//                            },
+//                            () -> {
+//                                log.info("Creating new item: {} with quantity {}",
+//                                        productId, targetQuantity);
+//                                CartItem newItem = new CartItem();
+//                                newItem.setCart(cart);
+//                                newItem.setProductId(productId);
+//                                newItem.setQuantity(targetQuantity);
+//                                cartItemRepository.save(newItem);
+//                            }
+//                    );
+//            processedItems++;
+//        }
+//
+//        log.info("Processed {} items", processedItems);
+//
+//        Cart updatedCart = cartRepository.findActiveCartWithItems(username)
+//                .orElseThrow(() -> new CartNotFoundException(username, cart.getShoppingCartId()));
+//
+//        log.info("Final cart has {} items", updatedCart.getItems().size());
+//        return shoppingCartMapper.toDto(updatedCart);
+//    }
+
     @Transactional
-    public ShoppingCartDto addProductsToCart(String username, Map<String, Integer> products) { // Меняем UUID на String!
+    public ShoppingCartDto addProductsToCart(String username, Map<String, Integer> products) {
         validateUsername(username);
         log.info("Adding products to cart for user: {}, products: {}", username, products);
 
         Cart cart = cartRepository.findActiveCartWithItems(username)
                 .orElseGet(() -> createNewCart(username));
 
-        // Конвертируем String ключи в UUID
         for (Map.Entry<String, Integer> entry : products.entrySet()) {
             UUID productId;
             try {
                 productId = UUID.fromString(entry.getKey());
             } catch (IllegalArgumentException e) {
                 log.error("Invalid UUID format: {}", entry.getKey());
-                continue; // или выбросить исключение
+                continue;
             }
 
             Integer targetQuantity = entry.getValue();
