@@ -24,6 +24,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
 
+
     public Page<ProductDto> getProductsByCategory(String category, Pageable pageable) {
         log.info("Getting products by category: {}, pageable: {}", category, pageable);
 
