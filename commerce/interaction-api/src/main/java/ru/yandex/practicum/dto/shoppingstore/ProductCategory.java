@@ -1,7 +1,5 @@
 package ru.yandex.practicum.dto.shoppingstore;
 
 public enum ProductCategory {
-   LIGHTING, CONTROL, SENSORS
+    LIGHTING, CONTROL, SENSORS
 }
-
-// DEVICE,

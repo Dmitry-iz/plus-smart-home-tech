@@ -3,9 +3,19 @@ package ru.yandex.practicum.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.dto.shoppingcart.ShoppingCartDto;
-import ru.yandex.practicum.dto.warehouse.*;
+
+import ru.yandex.practicum.dto.warehouse.AddProductToWarehouseRequest;
+import ru.yandex.practicum.dto.warehouse.AddressDto;
+import ru.yandex.practicum.dto.warehouse.BookedProductsDto;
+import ru.yandex.practicum.dto.warehouse.NewProductInWarehouseRequest;
 import ru.yandex.practicum.service.WarehouseService;
 
 @Slf4j
@@ -16,7 +26,6 @@ public class WarehouseController {
 
     private final WarehouseService warehouseService;
 
-    // 1. Добавить новый товар на склад
     @PutMapping
     public ResponseEntity<Void> newProductInWarehouse(@RequestBody NewProductInWarehouseRequest request) {
         log.info("Adding new product to warehouse: {}", request.getProductId());
@@ -24,7 +33,6 @@ public class WarehouseController {
         return ResponseEntity.ok().build();
     }
 
-    // 2. Проверить доступность товаров для корзины
     @PostMapping("/check")
     public ResponseEntity<BookedProductsDto> checkProductQuantityEnoughForShoppingCart(@RequestBody ShoppingCartDto shoppingCart) {
         log.info("Checking product availability for shopping cart: {}", shoppingCart.getShoppingCartId());
@@ -32,7 +40,6 @@ public class WarehouseController {
         return ResponseEntity.ok(result);
     }
 
-    // 3. Добавить количество существующего товара
     @PostMapping("/add")
     public ResponseEntity<Void> addProductToWarehouse(@RequestBody AddProductToWarehouseRequest request) {
         log.info("Adding quantity to existing product: {}, quantity: {}", request.getProductId(), request.getQuantity());
@@ -40,7 +47,6 @@ public class WarehouseController {
         return ResponseEntity.ok().build();
     }
 
-    // 4. Получить адрес склада
     @GetMapping("/address")
     public ResponseEntity<AddressDto> getWarehouseAddress() {
         log.info("Getting warehouse address");

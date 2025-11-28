@@ -24,7 +24,6 @@ public class ShoppingCartMapper {
         ShoppingCartDto dto = new ShoppingCartDto();
         dto.setShoppingCartId(cart.getShoppingCartId());
 
-        // Используем String ключи вместо UUID
         Map<String, Integer> products = new HashMap<>();
         if (cart.getItems() != null) {
             for (CartItem item : cart.getItems()) {
@@ -40,35 +39,6 @@ public class ShoppingCartMapper {
         return dto;
     }
 
-    // ... остальной код без изменений
-
-
-//    public Cart toEntity(ShoppingCartDto dto, String username) {
-//        if (dto == null) {
-//            return null;
-//        }
-//
-//        Cart cart = new Cart();
-//        cart.setShoppingCartId(dto.getShoppingCartId());
-//        cart.setUsername(username);
-//
-//        // Преобразуем Map<UUID, Integer> в List<CartItem>
-//        if (dto.getProducts() != null) {
-//            var items = dto.getProducts().entrySet().stream()
-//                    .map(entry -> {
-//                        CartItem item = new CartItem();
-//                        item.setCart(cart);
-//                        item.setProductId(entry.getKey());
-//                        item.setQuantity(entry.getValue());
-//                        return item;
-//                    })
-//                    .collect(Collectors.toList());
-//            cart.setItems(items);
-//        }
-//
-//        return cart;
-//    }
-
     public Cart toEntity(ShoppingCartDto dto, String username) {
         if (dto == null) {
             return null;
@@ -78,7 +48,6 @@ public class ShoppingCartMapper {
         cart.setShoppingCartId(dto.getShoppingCartId());
         cart.setUsername(username);
 
-        // Преобразуем Map<String, Integer> в List<CartItem>
         if (dto.getProducts() != null) {
             var items = dto.getProducts().entrySet().stream()
                     .map(entry -> {
@@ -92,7 +61,6 @@ public class ShoppingCartMapper {
                     .collect(Collectors.toList());
             cart.setItems(items);
         }
-
         return cart;
     }
 }

@@ -258,9 +258,8 @@ public class AggregationStarter {
 
     private final SnapshotAggregationService aggregationService;
     private final SnapshotMapperService snapshotMapperService;
-    private final KafkaConfig kafkaConfig;  // ← ДОБАВЛЕНА ЗАВИСИМОСТЬ ОТ КОНФИГА
+    private final KafkaConfig kafkaConfig;
 
-    // УДАЛЕНЫ КОНСТАНТЫ - теперь берутся из конфигурации
     private volatile boolean running = true;
     private Consumer<String, SensorEventAvro> consumer;
     private Producer<String, byte[]> producer;
@@ -271,7 +270,6 @@ public class AggregationStarter {
         initializeKafkaClients();
 
         try {
-            // Используем настройки из конфигурации вместо констант
             String sensorsTopic = kafkaConfig.getSensorsTopic();
             String snapshotsTopic = kafkaConfig.getSnapshotsTopic();
             String consumerGroup = kafkaConfig.getConsumerGroup();
@@ -325,7 +323,6 @@ public class AggregationStarter {
     }
 
     private void initializeKafkaClients() {
-        // Используем настройки из конфигурации вместо хардкода
         Properties consumerProps = new Properties();
         consumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaConfig.getBootstrapServers());
         consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaConfig.getConsumerGroup());
@@ -385,8 +382,6 @@ public class AggregationStarter {
     private void sendSnapshotToKafka(SensorsSnapshotAvro snapshot) {
         try {
             byte[] snapshotBytes = snapshotMapperService.snapshotToAvroBytes(snapshot);
-
-            // Используем настройки из конфигурации вместо константы
             ProducerRecord<String, byte[]> snapshotRecord =
                     new ProducerRecord<>(kafkaConfig.getSnapshotsTopic(), snapshot.getHubId(), snapshotBytes);
 

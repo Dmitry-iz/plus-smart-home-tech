@@ -108,14 +108,10 @@ import java.util.Properties;
 public class HubEventProcessor implements Runnable {
 
     private final HubEventService hubEventService;
-    private final KafkaConfig kafkaConfig;  // ← ДОБАВЛЕНА ЗАВИСИМОСТЬ
+    private final KafkaConfig kafkaConfig;
 
     private volatile boolean running = true;
     private KafkaConsumer<String, byte[]> consumer;
-
-    // УДАЛЕНЫ КОНСТАНТЫ - теперь берутся из конфигурации
-    // private static final String HUBS_TOPIC = "telemetry.hubs.v1";
-    // private static final String CONSUMER_GROUP = "analyzer-hub-events";
 
     @Override
     public void run() {
@@ -123,8 +119,8 @@ public class HubEventProcessor implements Runnable {
         initializeConsumer();
 
         try {
-            String hubsTopic = "telemetry.hubs.v1";  // Можно вынести в конфиг если нужно
-            String consumerGroup = "analyzer-hub-events";  // Можно вынести в конфиг если нужно
+            String hubsTopic = "telemetry.hubs.v1";
+            String consumerGroup = "analyzer-hub-events";
 
             consumer.subscribe(List.of(hubsTopic));
             log.info("Subscribed to topic: {}", hubsTopic);

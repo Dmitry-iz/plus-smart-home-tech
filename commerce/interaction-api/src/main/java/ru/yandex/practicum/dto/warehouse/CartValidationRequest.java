@@ -6,10 +6,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartValidationRequest {
-    private Map<String, Integer> products; // productId -> quantity
+    private Map<String, Integer> products;
 }

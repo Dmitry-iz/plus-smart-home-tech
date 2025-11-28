@@ -14,14 +14,12 @@ import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, UUID> {
 
-    // ДОБАВЛЯЕМ МЕТОД С ПАГИНАЦИЕЙ
     Page<Product> findByProductCategoryAndProductState(
             ProductCategory productCategory,
             ProductState productState,
             Pageable pageable
     );
 
-    // ОСТАЛЬНЫЕ МЕТОДЫ НЕ МЕНЯЕМ
     List<Product> findByProductState(ProductState productState);
 
     @Query("SELECT p FROM Product p WHERE p.productCategory = :category AND p.productState = 'ACTIVE'")

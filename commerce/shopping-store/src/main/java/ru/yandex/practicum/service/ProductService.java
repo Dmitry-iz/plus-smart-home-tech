@@ -24,7 +24,6 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
 
-    // ИСПРАВЛЯЕМ ТОЛЬКО ЭТОТ МЕТОД - добавляем пагинацию
     public Page<ProductDto> getProductsByCategory(String category, Pageable pageable) {
         log.info("Getting products by category: {}, pageable: {}", category, pageable);
 
@@ -38,7 +37,6 @@ public class ProductService {
         return products.map(productMapper::toDto);
     }
 
-    // ОСТАЛЬНЫЕ МЕТОДЫ НЕ МЕНЯЕМ - они работают правильно
     public ProductDto getProduct(UUID productId) {
         log.info("Getting product by id: {}", productId);
 

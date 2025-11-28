@@ -131,23 +131,19 @@ import java.util.Properties;
 public class SnapshotProcessor {
 
     private final SnapshotAnalysisService snapshotAnalysisService;
-    private final KafkaConfig kafkaConfig;  // ← ДОБАВЛЕНА ЗАВИСИМОСТЬ
+    private final KafkaConfig kafkaConfig;
 
     private volatile boolean running = true;
     private KafkaConsumer<String, byte[]> consumer;
     private final DecoderFactory decoderFactory = DecoderFactory.get();
-
-    // УДАЛЕНЫ КОНСТАНТЫ - теперь берутся из конфигурации
-    // private static final String SNAPSHOTS_TOPIC = "telemetry.snapshots.v1";
-    // private static final String CONSUMER_GROUP = "analyzer-snapshots";
 
     public void start() {
         log.info("Starting Snapshot Processor...");
         initializeConsumer();
 
         try {
-            String snapshotsTopic = "telemetry.snapshots.v1";  // Можно вынести в конфиг если нужно
-            String consumerGroup = "analyzer-snapshots";  // Можно вынести в конфиг если нужно
+            String snapshotsTopic = "telemetry.snapshots.v1";
+            String consumerGroup = "analyzer-snapshots";
 
             consumer.subscribe(List.of(snapshotsTopic));
             log.info("Subscribed to topic: {}", snapshotsTopic);
@@ -173,7 +169,7 @@ public class SnapshotProcessor {
     private void initializeConsumer() {
         Properties props = new Properties();
         props.put("bootstrap.servers", kafkaConfig.getBootstrapServers());
-        props.put("group.id", "analyzer-snapshots");  // Можно использовать kafkaConfig.getConsumer().getGroupId() если настроить
+        props.put("group.id", "analyzer-snapshots");
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", "org.apache.kafka.common.serialization.ByteArrayDeserializer");
         props.put("auto.offset.reset", "earliest");

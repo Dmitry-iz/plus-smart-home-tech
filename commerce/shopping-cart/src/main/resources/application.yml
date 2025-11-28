@@ -1,6 +1,6 @@
 spring:
   application:
-    name: shopping-cart  # для каждого сервиса свое имя
+    name: shopping-cart
   config:
     import: "configserver:"
   cloud:

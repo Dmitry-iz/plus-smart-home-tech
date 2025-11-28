@@ -35,7 +35,6 @@
             <artifactId>spring-web</artifactId>
         </dependency>
 
-        <!-- ДОБАВЛЯЕМ ДЛЯ ОБРАБОТКИ ОШИБОК -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>

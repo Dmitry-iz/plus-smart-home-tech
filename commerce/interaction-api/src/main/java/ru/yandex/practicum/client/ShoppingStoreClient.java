@@ -2,7 +2,12 @@ package ru.yandex.practicum.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import ru.yandex.practicum.dto.common.PageResponse;
 import ru.yandex.practicum.dto.shoppingstore.ProductDto;
 import ru.yandex.practicum.dto.shoppingstore.SetProductQuantityStateRequest;
@@ -21,8 +26,6 @@ public interface ShoppingStoreClient {
             @RequestParam(value = "sort", required = false) List<String> sort
     );
 
-
-
     @GetMapping("/api/v1/shopping-store/{productId}")
     ProductDto getProduct(@PathVariable("productId") UUID productId);
 
@@ -35,7 +38,6 @@ public interface ShoppingStoreClient {
     @PostMapping("/api/v1/shopping-store/removeProductFromStore")
     Boolean removeProductFromStore(@RequestBody UUID productId);
 
-    // ОРИГИНАЛЬНЫЙ МЕТОД - ТОЛЬКО ДЛЯ JSON
     @PostMapping("/api/v1/shopping-store/quantityState")
     Boolean setQuantityState(@RequestBody SetProductQuantityStateRequest request);
 }

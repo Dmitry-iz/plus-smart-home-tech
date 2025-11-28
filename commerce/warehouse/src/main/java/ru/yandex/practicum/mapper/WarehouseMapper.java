@@ -24,7 +24,7 @@ public class WarehouseMapper {
         dto.setCity(address.getCity());
         dto.setStreet(address.getStreet());
         dto.setHouse(address.getHouse());
-        dto.setFlat(address.getFlat()); // Теперь используем flat
+        dto.setFlat(address.getFlat());
 
         return dto;
     }

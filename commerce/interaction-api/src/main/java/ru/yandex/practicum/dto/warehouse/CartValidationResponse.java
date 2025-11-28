@@ -12,5 +12,5 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CartValidationResponse {
     private Boolean isValid;
-    private Map<UUID, String> validationErrors; // productId -> error message
+    private Map<UUID, String> validationErrors;
 }

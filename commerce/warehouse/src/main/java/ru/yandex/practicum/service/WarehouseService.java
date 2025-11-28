@@ -5,8 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.dto.shoppingcart.ShoppingCartDto;
-import ru.yandex.practicum.dto.warehouse.*;
-import ru.yandex.practicum.entity.WarehouseAddress;
+
+import ru.yandex.practicum.dto.warehouse.AddProductToWarehouseRequest;
+import ru.yandex.practicum.dto.warehouse.AddressDto;
+import ru.yandex.practicum.dto.warehouse.BookedProductsDto;
+import ru.yandex.practicum.dto.warehouse.NewProductInWarehouseRequest;
 import ru.yandex.practicum.entity.WarehouseItem;
 import ru.yandex.practicum.exception.WarehouseItemNotFoundException;
 import ru.yandex.practicum.mapper.WarehouseMapper;
@@ -26,22 +29,18 @@ public class WarehouseService {
     private final WarehouseAddressRepository warehouseAddressRepository;
     private final WarehouseMapper warehouseMapper;
 
-    // 1. Добавить новый товар на склад
     @Transactional
     public void addNewProduct(NewProductInWarehouseRequest request) {
         log.info("Adding new product to warehouse: {}", request.getProductId());
 
-        // Проверяем, существует ли уже товар
         if (warehouseItemRepository.findByProductId(request.getProductId()).isPresent()) {
             throw new IllegalArgumentException("Product already exists in warehouse: " + request.getProductId());
         }
 
-        // Создаем новый товар на складе
         WarehouseItem item = new WarehouseItem();
         item.setProductId(request.getProductId());
-        item.setQuantity(0); // Начальное количество 0
+        item.setQuantity(0);
 
-        // Заполняем характеристики из dimension
         if (request.getDimension() != null) {
             item.setWidth(request.getDimension().getWidth());
             item.setHeight(request.getDimension().getHeight());
@@ -55,7 +54,6 @@ public class WarehouseService {
         log.info("New product added to warehouse: {}", request.getProductId());
     }
 
-    // 2. Проверить доступность товаров для корзины
     public BookedProductsDto checkProductAvailability(ShoppingCartDto shoppingCart) {
         log.info("Checking availability for shopping cart: {}", shoppingCart.getShoppingCartId());
 
@@ -63,7 +61,6 @@ public class WarehouseService {
         Double totalWeight = 0.0;
         Boolean hasFragile = false;
 
-        // Проверяем каждый товар в корзине
         for (Map.Entry<String, Integer> entry : shoppingCart.getProducts().entrySet()) {
             UUID productId = UUID.fromString(entry.getKey()); // Конвертируем
             Integer requestedQuantity = entry.getValue();
@@ -71,12 +68,10 @@ public class WarehouseService {
             WarehouseItem item = warehouseItemRepository.findByProductId(productId)
                     .orElseThrow(() -> new WarehouseItemNotFoundException(productId));
 
-            // Проверяем достаточно ли товара
             if (item.getQuantity() < requestedQuantity) {
                 throw new IllegalArgumentException("Insufficient quantity for product: " + productId);
             }
 
-            // Рассчитываем объем и вес
             if (item.getWidth() != null && item.getHeight() != null && item.getDepth() != null) {
                 Double volume = item.getWidth().doubleValue() * item.getHeight().doubleValue() * item.getDepth().doubleValue();
                 totalVolume += volume * requestedQuantity;
@@ -94,7 +89,6 @@ public class WarehouseService {
         return new BookedProductsDto(totalVolume, totalWeight, hasFragile);
     }
 
-    // 3. Добавить количество существующего товара
     @Transactional
     public void addProductQuantity(AddProductToWarehouseRequest request) {
         log.info("Adding quantity to product: {}, quantity: {}", request.getProductId(), request.getQuantity());
@@ -102,20 +96,16 @@ public class WarehouseService {
         WarehouseItem item = warehouseItemRepository.findByProductId(request.getProductId())
                 .orElseThrow(() -> new WarehouseItemNotFoundException(request.getProductId()));
 
-        // Увеличиваем количество
         item.setQuantity(item.getQuantity() + request.getQuantity().intValue());
         warehouseItemRepository.save(item);
 
         log.info("Quantity updated for product: {}, new quantity: {}", request.getProductId(), item.getQuantity());
     }
 
-    // 4. Получить адрес склада
     public AddressDto getWarehouseAddress() {
         log.info("Getting warehouse address");
 
         try {
-            // Простая реализация - всегда возвращаем случайный адрес
-            // Не зависящая от базы данных
             String addressValue = Math.random() > 0.5 ? "ADDRESS_1" : "ADDRESS_2";
 
             AddressDto address = new AddressDto();
@@ -129,7 +119,6 @@ public class WarehouseService {
 
         } catch (Exception e) {
             log.error("Error getting warehouse address: {}", e.getMessage(), e);
-            // Возвращаем дефолтный адрес в случае ошибки
             AddressDto defaultAddress = new AddressDto();
             defaultAddress.setCountry("ADDRESS_1");
             defaultAddress.setCity("ADDRESS_1");

@@ -11,7 +11,6 @@ public class CartNotFoundException extends BaseException {
                 "Cart not found");
     }
 
-    // ДОБАВЛЯЕМ конструктор для случая когда cartId = null
     public CartNotFoundException(String username) {
         super(HttpStatus.NOT_FOUND,
                 "Cart not found for user: " + username,

@@ -1,6 +1,11 @@
 package ru.yandex.practicum.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,10 +31,9 @@ public class WarehouseAddress {
     @Column(nullable = false)
     private String house;
 
-    @Column(nullable = false) // Делаем обязательным
-    private String flat; // Меняем apartment на flat
+    @Column(nullable = false)
+    private String flat;
 
-    // Статический метод для получения случайного адреса как в ТЗ
     public static WarehouseAddress getRandomAddress() {
         WarehouseAddress address = new WarehouseAddress();
         String addressValue = Math.random() > 0.5 ? "ADDRESS_1" : "ADDRESS_2";
@@ -37,7 +41,7 @@ public class WarehouseAddress {
         address.setCity(addressValue);
         address.setStreet(addressValue);
         address.setHouse(addressValue);
-        address.setFlat(addressValue); // Теперь используем flat
+        address.setFlat(addressValue);
         return address;
     }
 }

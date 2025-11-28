@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 public class KafkaConfig {
     private String bootstrapServers = "localhost:9092";
 
-    // Дополнительные настройки если нужны
     private Consumer consumer = new Consumer();
     private Producer producer = new Producer();
 
@@ -26,6 +25,5 @@ public class KafkaConfig {
     @Getter
     @Setter
     public static class Producer {
-        // producer settings if needed
     }
 }
