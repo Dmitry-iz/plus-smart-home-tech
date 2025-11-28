@@ -64,8 +64,8 @@ public class WarehouseService {
         Boolean hasFragile = false;
 
         // Проверяем каждый товар в корзине
-        for (Map.Entry<UUID, Integer> entry : shoppingCart.getProducts().entrySet()) {
-            UUID productId = entry.getKey();
+        for (Map.Entry<String, Integer> entry : shoppingCart.getProducts().entrySet()) {
+            UUID productId = UUID.fromString(entry.getKey()); // Конвертируем
             Integer requestedQuantity = entry.getValue();
 
             WarehouseItem item = warehouseItemRepository.findByProductId(productId)

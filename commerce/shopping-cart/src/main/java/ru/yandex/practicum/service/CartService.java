@@ -15,8 +15,10 @@ import ru.yandex.practicum.mapper.ShoppingCartMapper;
 import ru.yandex.practicum.repository.CartRepository;
 import ru.yandex.practicum.repository.CartItemRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -197,6 +199,47 @@ public class CartService {
 //        return shoppingCartMapper.toDto(updatedCart);
 //    }
 
+//    @Transactional
+//    public ShoppingCartDto addProductsToCart(String username, Map<String, Integer> products) {
+//        validateUsername(username);
+//        log.info("Adding products to cart for user: {}, products: {}", username, products);
+//
+//        Cart cart = cartRepository.findActiveCartWithItems(username)
+//                .orElseGet(() -> createNewCart(username));
+//
+//        for (Map.Entry<String, Integer> entry : products.entrySet()) {
+//            UUID productId;
+//            try {
+//                productId = UUID.fromString(entry.getKey());
+//            } catch (IllegalArgumentException e) {
+//                log.error("Invalid UUID format: {}", entry.getKey());
+//                continue;
+//            }
+//
+//            Integer targetQuantity = entry.getValue();
+//
+//            cartItemRepository.findByCartShoppingCartIdAndProductId(cart.getShoppingCartId(), productId)
+//                    .ifPresentOrElse(
+//                            cartItem -> {
+//                                cartItem.setQuantity(targetQuantity);
+//                                cartItemRepository.save(cartItem);
+//                            },
+//                            () -> {
+//                                CartItem newItem = new CartItem();
+//                                newItem.setCart(cart);
+//                                newItem.setProductId(productId);
+//                                newItem.setQuantity(targetQuantity);
+//                                cartItemRepository.save(newItem);
+//                            }
+//                    );
+//        }
+//
+//        Cart updatedCart = cartRepository.findActiveCartWithItems(username)
+//                .orElseThrow(() -> new CartNotFoundException(username, cart.getShoppingCartId()));
+//
+//        return shoppingCartMapper.toDto(updatedCart);
+//    }
+
     @Transactional
     public ShoppingCartDto addProductsToCart(String username, Map<String, Integer> products) {
         validateUsername(username);
@@ -204,6 +247,9 @@ public class CartService {
 
         Cart cart = cartRepository.findActiveCartWithItems(username)
                 .orElseGet(() -> createNewCart(username));
+
+        log.info("Found/created cart: {}, items count: {}", cart.getShoppingCartId(),
+                cart.getItems() != null ? cart.getItems().size() : "null");
 
         for (Map.Entry<String, Integer> entry : products.entrySet()) {
             UUID productId;
@@ -216,24 +262,39 @@ public class CartService {
 
             Integer targetQuantity = entry.getValue();
 
-            cartItemRepository.findByCartShoppingCartIdAndProductId(cart.getShoppingCartId(), productId)
-                    .ifPresentOrElse(
-                            cartItem -> {
-                                cartItem.setQuantity(targetQuantity);
-                                cartItemRepository.save(cartItem);
-                            },
-                            () -> {
-                                CartItem newItem = new CartItem();
-                                newItem.setCart(cart);
-                                newItem.setProductId(productId);
-                                newItem.setQuantity(targetQuantity);
-                                cartItemRepository.save(newItem);
-                            }
-                    );
+            Optional<CartItem> existingItem = cartItemRepository.findByCartShoppingCartIdAndProductId(cart.getShoppingCartId(), productId);
+
+            if (existingItem.isPresent()) {
+                CartItem cartItem = existingItem.get();
+                log.info("Updating existing item: {} from {} to {}",
+                        productId, cartItem.getQuantity(), targetQuantity);
+                cartItem.setQuantity(targetQuantity);
+                cartItemRepository.save(cartItem);
+            } else {
+                log.info("Creating new item: {} with quantity {}", productId, targetQuantity);
+                CartItem newItem = new CartItem();
+                newItem.setCart(cart);
+                newItem.setProductId(productId);
+                newItem.setQuantity(targetQuantity);
+                cartItemRepository.save(newItem);
+
+                // ВАЖНО: Добавляем item в коллекцию cart.items
+                if (cart.getItems() == null) {
+                    cart.setItems(new ArrayList<>());
+                }
+                cart.getItems().add(newItem);
+            }
         }
+
+        // Сохраняем cart чтобы обновить связи
+        cartRepository.save(cart);
 
         Cart updatedCart = cartRepository.findActiveCartWithItems(username)
                 .orElseThrow(() -> new CartNotFoundException(username, cart.getShoppingCartId()));
+
+        log.info("Final cart before mapping - ID: {}, items count: {}",
+                updatedCart.getShoppingCartId(),
+                updatedCart.getItems() != null ? updatedCart.getItems().size() : "null");
 
         return shoppingCartMapper.toDto(updatedCart);
     }

@@ -5,11 +5,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Map;
-import java.util.UUID;
+
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartValidationRequest {
-    private Map<UUID, Integer> products; // productId -> quantity
+    private Map<String, Integer> products; // productId -> quantity
 }
