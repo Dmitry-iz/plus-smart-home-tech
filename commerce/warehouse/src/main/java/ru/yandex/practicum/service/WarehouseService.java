@@ -13,7 +13,6 @@ import ru.yandex.practicum.mapper.WarehouseMapper;
 import ru.yandex.practicum.repository.WarehouseAddressRepository;
 import ru.yandex.practicum.repository.WarehouseItemRepository;
 
-import java.math.BigDecimal;
 import java.util.Map;
 import java.util.UUID;
 
@@ -114,14 +113,30 @@ public class WarehouseService {
     public AddressDto getWarehouseAddress() {
         log.info("Getting warehouse address");
 
-        // Получаем существующий адрес или создаем случайный
-        WarehouseAddress address = warehouseAddressRepository.findAll().stream()
-                .findFirst()
-                .orElseGet(() -> {
-                    WarehouseAddress newAddress = WarehouseAddress.getRandomAddress();
-                    return warehouseAddressRepository.save(newAddress);
-                });
+        try {
+            // Простая реализация - всегда возвращаем случайный адрес
+            // Не зависящая от базы данных
+            String addressValue = Math.random() > 0.5 ? "ADDRESS_1" : "ADDRESS_2";
 
-        return warehouseMapper.toDto(address);
+            AddressDto address = new AddressDto();
+            address.setCountry(addressValue);
+            address.setCity(addressValue);
+            address.setStreet(addressValue);
+            address.setHouse(addressValue);
+            address.setFlat(addressValue);
+
+            return address;
+
+        } catch (Exception e) {
+            log.error("Error getting warehouse address: {}", e.getMessage(), e);
+            // Возвращаем дефолтный адрес в случае ошибки
+            AddressDto defaultAddress = new AddressDto();
+            defaultAddress.setCountry("ADDRESS_1");
+            defaultAddress.setCity("ADDRESS_1");
+            defaultAddress.setStreet("ADDRESS_1");
+            defaultAddress.setHouse("ADDRESS_1");
+            defaultAddress.setFlat("ADDRESS_1");
+            return defaultAddress;
+        }
     }
 }

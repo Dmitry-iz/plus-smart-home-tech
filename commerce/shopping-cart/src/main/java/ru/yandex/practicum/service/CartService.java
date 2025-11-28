@@ -18,6 +18,7 @@ import ru.yandex.practicum.repository.CartItemRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -39,6 +40,8 @@ public class CartService {
         return shoppingCartMapper.toDto(cart);
     }
 
+
+
 //    @Transactional
 //    public ShoppingCartDto addProductsToCart(String username, Map<UUID, Integer> products) {
 //        validateUsername(username);
@@ -47,30 +50,30 @@ public class CartService {
 //        Cart cart = cartRepository.findActiveCartWithItems(username)
 //                .orElseGet(() -> createNewCart(username));
 //
-//        // Добавляем или обновляем товары в корзине
+//        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Postman отправляет Map<UUID, Integer>, где значение - это КОЛИЧЕСТВО, а не приращение
 //        for (Map.Entry<UUID, Integer> entry : products.entrySet()) {
 //            UUID productId = entry.getKey();
-//            Integer quantity = entry.getValue();
+//            Integer targetQuantity = entry.getValue(); // Это целевое количество, а не приращение!
 //
 //            cartItemRepository.findByCartShoppingCartIdAndProductId(cart.getShoppingCartId(), productId)
 //                    .ifPresentOrElse(
 //                            cartItem -> {
-//                                // Обновляем количество если товар уже есть
-//                                cartItem.setQuantity(cartItem.getQuantity() + quantity);
+//                                // Если товар уже есть - УСТАНАВЛИВАЕМ указанное количество
+//                                cartItem.setQuantity(targetQuantity);
 //                                cartItemRepository.save(cartItem);
 //                            },
 //                            () -> {
-//                                // Добавляем новый товар
+//                                // Если товара нет - добавляем с указанным количеством
 //                                CartItem newItem = new CartItem();
 //                                newItem.setCart(cart);
 //                                newItem.setProductId(productId);
-//                                newItem.setQuantity(quantity);
+//                                newItem.setQuantity(targetQuantity);
 //                                cartItemRepository.save(newItem);
 //                            }
 //                    );
 //        }
 //
-//        // Обновляем корзину
+//        // Получаем обновленную корзину
 //        Cart updatedCart = cartRepository.findActiveCartWithItems(username)
 //                .orElseThrow(() -> new CartNotFoundException(username, cart.getShoppingCartId()));
 //
@@ -78,54 +81,46 @@ public class CartService {
 //    }
 
     @Transactional
-    public ShoppingCartDto addProductsToCart(String username, Map<UUID, Integer> products) {
+    public ShoppingCartDto addProductsToCart(String username, Map<String, Integer> products) { // Меняем UUID на String!
         validateUsername(username);
         log.info("Adding products to cart for user: {}, products: {}", username, products);
 
         Cart cart = cartRepository.findActiveCartWithItems(username)
                 .orElseGet(() -> createNewCart(username));
 
-        // ИСПРАВЛЕНИЕ: Добавляем товары к существующим, а не заменяем
-        for (Map.Entry<UUID, Integer> entry : products.entrySet()) {
-            UUID productId = entry.getKey();
-            Integer quantityToAdd = entry.getValue();
+        // Конвертируем String ключи в UUID
+        for (Map.Entry<String, Integer> entry : products.entrySet()) {
+            UUID productId;
+            try {
+                productId = UUID.fromString(entry.getKey());
+            } catch (IllegalArgumentException e) {
+                log.error("Invalid UUID format: {}", entry.getKey());
+                continue; // или выбросить исключение
+            }
+
+            Integer targetQuantity = entry.getValue();
 
             cartItemRepository.findByCartShoppingCartIdAndProductId(cart.getShoppingCartId(), productId)
                     .ifPresentOrElse(
                             cartItem -> {
-                                // Если товар уже есть - УВЕЛИЧИВАЕМ количество
-                                cartItem.setQuantity(cartItem.getQuantity() + quantityToAdd);
+                                cartItem.setQuantity(targetQuantity);
                                 cartItemRepository.save(cartItem);
                             },
                             () -> {
-                                // Если товара нет - добавляем новый
                                 CartItem newItem = new CartItem();
                                 newItem.setCart(cart);
                                 newItem.setProductId(productId);
-                                newItem.setQuantity(quantityToAdd);
+                                newItem.setQuantity(targetQuantity);
                                 cartItemRepository.save(newItem);
                             }
                     );
         }
 
-        // Получаем обновленную корзину
         Cart updatedCart = cartRepository.findActiveCartWithItems(username)
                 .orElseThrow(() -> new CartNotFoundException(username, cart.getShoppingCartId()));
 
         return shoppingCartMapper.toDto(updatedCart);
     }
-
-//    @Transactional
-//    public void deactivateCart(String username) {
-//        validateUsername(username);
-//        log.info("Deactivating cart for user: {}", username);
-//
-//        Cart cart = cartRepository.findByUsernameAndStatus(username, Cart.CartStatus.ACTIVE)
-//                .orElseThrow(() -> new CartNotFoundException(username, null));
-//
-//        cart.setStatus(Cart.CartStatus.DEACTIVATED);
-//        cartRepository.save(cart);
-//    }
 
     @Transactional
     public void deactivateCart(String username) {
@@ -144,6 +139,8 @@ public class CartService {
         log.info("No active cart found for user: {}, nothing to deactivate", username);
     }
 
+
+
     @Transactional
     public ShoppingCartDto removeProductsFromCart(String username, List<UUID> productIds) {
         validateUsername(username);
@@ -152,8 +149,21 @@ public class CartService {
         Cart cart = cartRepository.findActiveCartWithItems(username)
                 .orElseThrow(() -> new CartNotFoundException(username, null));
 
+        // Проверяем, есть ли вообще товары в корзине
         if (cart.getItems().isEmpty()) {
-            throw new NoProductsInShoppingCartException(); // ИСПРАВЛЕНО: без аргументов
+            throw new NoProductsInShoppingCartException();
+        }
+
+        // Проверяем, что все удаляемые товары действительно есть в корзине
+        List<UUID> cartProductIds = cart.getItems().stream()
+                .map(CartItem::getProductId)
+                .collect(Collectors.toList());
+
+        boolean allProductsExist = productIds.stream()
+                .allMatch(cartProductIds::contains);
+
+        if (!allProductsExist) {
+            throw new NoProductsInShoppingCartException();
         }
 
         // Удаляем указанные товары

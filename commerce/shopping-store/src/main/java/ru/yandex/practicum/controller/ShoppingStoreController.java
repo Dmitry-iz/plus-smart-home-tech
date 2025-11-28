@@ -95,42 +95,19 @@ public class ShoppingStoreController implements ShoppingStoreClient {
         return productService.setQuantityState(request);
     }
 
-    private Pageable createPageable(int page, int size, List<String> sort) {
-        if (sort == null || sort.isEmpty()) {
-            return PageRequest.of(page, size);
-        }
-
-        Sort.Direction direction = Sort.Direction.ASC;
-        String sortField = "productName";
-
-        if (sort.size() > 0) {
-            String sortParam = sort.get(0);
-            if (sortParam.contains(",")) {
-                String[] parts = sortParam.split(",");
-                sortField = parts[0];
-                direction = Sort.Direction.fromString(parts[1]);
-            } else {
-                sortField = sortParam;
-            }
-        }
-
-        return PageRequest.of(page, size, direction, sortField);
-    }
-
 //    private Pageable createPageable(int page, int size, List<String> sort) {
 //        if (sort == null || sort.isEmpty()) {
 //            return PageRequest.of(page, size);
 //        }
 //
+//        // Исправляем обработку сортировки - правильно парсим "field,DIRECTION"
 //        List<Sort.Order> orders = new ArrayList<>();
-//
 //        for (String sortParam : sort) {
 //            if (sortParam.contains(",")) {
 //                String[] parts = sortParam.split(",");
 //                String field = parts[0].trim();
 //                Sort.Direction direction = parts.length > 1 ?
-//                        Sort.Direction.fromString(parts[1].trim().toUpperCase()) :
-//                        Sort.Direction.ASC;
+//                        Sort.Direction.fromString(parts[1].trim()) : Sort.Direction.ASC;
 //                orders.add(new Sort.Order(direction, field));
 //            } else {
 //                orders.add(new Sort.Order(Sort.Direction.ASC, sortParam.trim()));
@@ -140,18 +117,37 @@ public class ShoppingStoreController implements ShoppingStoreClient {
 //        return PageRequest.of(page, size, Sort.by(orders));
 //    }
 
+    private Pageable createPageable(int page, int size, List<String> sort) {
+        log.info("Creating pageable - page: {}, size: {}, sort: {}", page, size, sort);
+
+        if (sort == null || sort.isEmpty()) {
+            return PageRequest.of(page, size);
+        }
+
+        // Простая обработка для отладки
+        for (String sortParam : sort) {
+            log.info("Processing sort param: {}", sortParam);
+            try {
+                String[] parts = sortParam.split(",");
+                String field = parts[0].trim();
+                Sort.Direction direction = parts.length > 1 ?
+                        Sort.Direction.fromString(parts[1].trim()) : Sort.Direction.ASC;
+
+                log.info("Parsed - field: {}, direction: {}", field, direction);
+                return PageRequest.of(page, size, direction, field);
+
+            } catch (Exception e) {
+                log.error("Error parsing sort: {}", sortParam, e);
+            }
+        }
+
+        return PageRequest.of(page, size);
+    }
+
+
     private List<PageResponse.SortInfo> convertSort(Sort sort) {
         return sort.stream()
                 .map(order -> new PageResponse.SortInfo(order.getProperty(), order.getDirection().name()))
                 .collect(Collectors.toList());
     }
-
-//    private List<PageResponse.SortInfo> convertSort(Sort sort) {
-//        return sort.stream()
-//                .map(order -> new PageResponse.SortInfo(
-//                        order.getProperty(),
-//                        order.getDirection().name() // Должно возвращать "DESC" для нисходящей сортировки
-//                ))
-//                .collect(Collectors.toList());
-//    }
 }

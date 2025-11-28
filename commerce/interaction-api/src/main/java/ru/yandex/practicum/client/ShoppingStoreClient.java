@@ -13,8 +13,6 @@ import java.util.UUID;
 @FeignClient(name = "shopping-store")
 public interface ShoppingStoreClient {
 
-
-
     @GetMapping("/api/v1/shopping-store")
     PageResponse<ProductDto> getProductsByCategory(
             @RequestParam("category") String category,
@@ -22,6 +20,8 @@ public interface ShoppingStoreClient {
             @RequestParam(value = "size", defaultValue = "20") int size,
             @RequestParam(value = "sort", required = false) List<String> sort
     );
+
+
 
     @GetMapping("/api/v1/shopping-store/{productId}")
     ProductDto getProduct(@PathVariable("productId") UUID productId);

@@ -26,7 +26,8 @@ public class WarehouseAddress {
     @Column(nullable = false)
     private String house;
 
-    private String apartment; // Оставляем как есть в entity
+    @Column(nullable = false) // Делаем обязательным
+    private String flat; // Меняем apartment на flat
 
     // Статический метод для получения случайного адреса как в ТЗ
     public static WarehouseAddress getRandomAddress() {
@@ -36,7 +37,7 @@ public class WarehouseAddress {
         address.setCity(addressValue);
         address.setStreet(addressValue);
         address.setHouse(addressValue);
-        address.setApartment(addressValue);
+        address.setFlat(addressValue); // Теперь используем flat
         return address;
     }
 }

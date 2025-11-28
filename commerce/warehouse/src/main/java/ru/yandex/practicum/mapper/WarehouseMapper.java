@@ -7,12 +7,16 @@ import ru.yandex.practicum.entity.WarehouseAddress;
 @Component
 public class WarehouseMapper {
 
-    // УДАЛЯЕМ все методы с WarehouseItemDto - они больше не нужны
-
-    // ОСТАВЛЯЕМ ТОЛЬКО метод для AddressDto
     public AddressDto toDto(WarehouseAddress address) {
         if (address == null) {
-            return null;
+            // Возвращаем дефолтный адрес вместо null
+            AddressDto dto = new AddressDto();
+            dto.setCountry("ADDRESS_1");
+            dto.setCity("ADDRESS_1");
+            dto.setStreet("ADDRESS_1");
+            dto.setHouse("ADDRESS_1");
+            dto.setFlat("ADDRESS_1");
+            return dto;
         }
 
         AddressDto dto = new AddressDto();
@@ -20,7 +24,7 @@ public class WarehouseMapper {
         dto.setCity(address.getCity());
         dto.setStreet(address.getStreet());
         dto.setHouse(address.getHouse());
-        dto.setFlat(address.getApartment()); // Исправляем apartment на flat как в спецификации
+        dto.setFlat(address.getFlat()); // Теперь используем flat
 
         return dto;
     }

@@ -26,20 +26,17 @@ public class ShoppingCartController implements ShoppingCartClient {
         return cartService.getShoppingCart(username);
     }
 
-
-
     @Override
     @DeleteMapping
     public void deactivateCart(@RequestParam("username") String username) {
         cartService.deactivateCart(username);
     }
 
-
     // Все методы ДОЛЖНЫ совпадать с Feign Client
     @PutMapping
     public ShoppingCartDto addProductsToCart(
             @RequestParam("username") String username,
-            @RequestBody Map<UUID, Integer> products) {  // Body ОБЯЗАТЕЛЕН
+            @RequestBody Map<String, Integer> products) {  // Body ОБЯЗАТЕЛЕН
         return cartService.addProductsToCart(username, products);
     }
 

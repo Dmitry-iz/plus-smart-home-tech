@@ -18,7 +18,7 @@ public interface ShoppingCartClient {
     @PutMapping("/api/v1/shopping-cart")
     ShoppingCartDto addProductsToCart(
             @RequestParam("username") String username,
-            @RequestBody Map<UUID, Integer> products
+            @RequestBody Map<String, Integer> products
     );
 
     @DeleteMapping("/api/v1/shopping-cart")
