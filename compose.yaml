@@ -10,6 +10,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d analyzer"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   kafka:
     image: confluentinc/confluent-local:7.4.3
@@ -50,16 +55,20 @@ services:
     image: postgres:13
     container_name: postgres-schema-init
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     command: |
       bash -c "
         echo 'Waiting for PostgreSQL to be ready...'
-        sleep 10
-        echo 'Creating schemas for commerce services...'
+        until PGPASSWORD=postgres psql -h postgres -U postgres -d analyzer -c 'SELECT 1' > /dev/null 2>&1; do
+          echo 'PostgreSQL is unavailable - sleeping'
+          sleep 2
+        done
+        echo 'Creating ALL necessary schemas...'
         PGPASSWORD=postgres psql -h postgres -U postgres -d analyzer -c 'CREATE SCHEMA IF NOT EXISTS shopping_store;'
         PGPASSWORD=postgres psql -h postgres -U postgres -d analyzer -c 'CREATE SCHEMA IF NOT EXISTS shopping_cart;'
         PGPASSWORD=postgres psql -h postgres -U postgres -d analyzer -c 'CREATE SCHEMA IF NOT EXISTS warehouse;'
-        echo 'Commerce schemas created successfully'
+        echo 'All commerce schemas created successfully'
       "
     restart: on-failure
 
