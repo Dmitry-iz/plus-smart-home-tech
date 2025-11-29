@@ -16,7 +16,8 @@ spring:
         format_sql: true
   sql:
     init:
-      mode: never
+      mode: always  # ← ИЗМЕНИТЬ с never на always
+      schema-locations: classpath:schema.sql  # ← ДОБАВИТЬ эту строку
 
 server:
   port: 0
