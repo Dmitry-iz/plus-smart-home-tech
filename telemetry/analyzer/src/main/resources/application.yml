@@ -12,6 +12,8 @@ spring:
       retry:
         useRandomPolicy: true
         max-interval: 6000
+  kafka:
+    bootstrap-servers: "localhost:9092"
 
 eureka:
   client:

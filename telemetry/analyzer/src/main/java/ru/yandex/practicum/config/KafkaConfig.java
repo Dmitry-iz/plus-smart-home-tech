@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties("spring.kafka")
 public class KafkaConfig {
-    private String bootstrapServers = "localhost:9092";
+    private String bootstrapServers;
 
     private Consumer consumer = new Consumer();
     private Producer producer = new Producer();

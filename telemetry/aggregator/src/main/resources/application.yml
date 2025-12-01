@@ -13,6 +13,13 @@ spring:
         useRandomPolicy: true
         max-interval: 6000
 
+aggregator:
+  kafka:
+    bootstrap-servers: "localhost:9092"
+    sensors-topic: "telemetry.sensors.v1"
+    snapshots-topic: "telemetry.snapshots.v1"
+    consumer-group: "aggregator-group"
+
 eureka:
   client:
     serviceUrl:

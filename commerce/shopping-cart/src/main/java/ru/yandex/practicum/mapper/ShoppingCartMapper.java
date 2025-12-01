@@ -1,7 +1,9 @@
 package ru.yandex.practicum.mapper;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
+import org.mapstruct.factory.Mappers;
 import ru.yandex.practicum.dto.shoppingcart.ShoppingCartDto;
 import ru.yandex.practicum.entity.Cart;
 import ru.yandex.practicum.entity.CartItem;
@@ -11,56 +13,54 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Slf4j
+@Mapper(componentModel = "spring", uses = UUIDMapper.class)
+public interface ShoppingCartMapper {
 
-@Component
-public class ShoppingCartMapper {
+    ShoppingCartMapper INSTANCE = Mappers.getMapper(ShoppingCartMapper.class);
 
-    public ShoppingCartDto toDto(Cart cart) {
-        if (cart == null) {
-            return null;
+    @Mapping(target = "products", source = "items", qualifiedByName = "mapItemsToProducts")
+    ShoppingCartDto toDto(Cart cart);
+
+    @Mapping(target = "items", source = "products", qualifiedByName = "mapProductsToItems")
+    @Mapping(target = "username", ignore = true)
+    Cart toEntity(ShoppingCartDto dto);
+
+    default Cart toEntity(ShoppingCartDto dto, String username) {
+        Cart cart = toEntity(dto);
+        if (cart != null) {
+            cart.setUsername(username);
+        }
+        return cart;
+    }
+
+    @Named("mapItemsToProducts")
+    default Map<String, Integer> mapItemsToProducts(java.util.List<CartItem> items) {
+        if (items == null) {
+            return new HashMap<>();
         }
 
-        ShoppingCartDto dto = new ShoppingCartDto();
-        dto.setShoppingCartId(cart.getShoppingCartId());
-
         Map<String, Integer> products = new HashMap<>();
-        if (cart.getItems() != null) {
-            for (CartItem item : cart.getItems()) {
+        for (CartItem item : items) {
+            if (item != null && item.getProductId() != null) {
                 products.put(item.getProductId().toString(), item.getQuantity());
             }
         }
-        dto.setProducts(products);
-
-        log.info("Mapped cart {} with {} items: {}",
-                cart.getShoppingCartId(),
-                products.size(),
-                products);
-        return dto;
+        return products;
     }
 
-    public Cart toEntity(ShoppingCartDto dto, String username) {
-        if (dto == null) {
+    @Named("mapProductsToItems")
+    default java.util.List<CartItem> mapProductsToItems(Map<String, Integer> products) {
+        if (products == null) {
             return null;
         }
 
-        Cart cart = new Cart();
-        cart.setShoppingCartId(dto.getShoppingCartId());
-        cart.setUsername(username);
-
-        if (dto.getProducts() != null) {
-            var items = dto.getProducts().entrySet().stream()
-                    .map(entry -> {
-                        CartItem item = new CartItem();
-                        item.setCart(cart);
-                        // КОНВЕРТИРУЕМ String в UUID
-                        item.setProductId(UUID.fromString(entry.getKey()));
-                        item.setQuantity(entry.getValue());
-                        return item;
-                    })
-                    .collect(Collectors.toList());
-            cart.setItems(items);
-        }
-        return cart;
+        return products.entrySet().stream()
+                .map(entry -> {
+                    CartItem item = new CartItem();
+                    item.setProductId(UUID.fromString(entry.getKey()));
+                    item.setQuantity(entry.getValue());
+                    return item;
+                })
+                .collect(Collectors.toList());
     }
 }
