@@ -5,7 +5,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
 import ru.yandex.practicum.dto.shoppingcart.ShoppingCartDto;
 import ru.yandex.practicum.entity.Cart;
 import ru.yandex.practicum.entity.CartItem;
@@ -17,8 +16,6 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", uses = UUIDMapper.class)
 public interface ShoppingCartMapper {
-
-    ShoppingCartMapper INSTANCE = Mappers.getMapper(ShoppingCartMapper.class);
 
     @Mapping(target = "products", source = "items", qualifiedByName = "mapItemsToProducts")
     ShoppingCartDto toDto(Cart cart);

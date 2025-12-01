@@ -2,14 +2,11 @@ package ru.yandex.practicum.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
 import ru.yandex.practicum.dto.warehouse.AddressDto;
 import ru.yandex.practicum.entity.WarehouseAddress;
 
 @Mapper(componentModel = "spring")
 public interface WarehouseMapper {
-
-    WarehouseMapper INSTANCE = Mappers.getMapper(WarehouseMapper.class);
 
     @Named("toDtoWithDefault")
     default AddressDto toDto(WarehouseAddress address) {
