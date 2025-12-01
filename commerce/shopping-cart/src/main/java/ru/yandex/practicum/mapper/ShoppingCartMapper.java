@@ -1,7 +1,9 @@
 package ru.yandex.practicum.mapper;
 
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 import ru.yandex.practicum.dto.shoppingcart.ShoppingCartDto;
@@ -24,6 +26,15 @@ public interface ShoppingCartMapper {
     @Mapping(target = "items", source = "products", qualifiedByName = "mapProductsToItems")
     @Mapping(target = "username", ignore = true)
     Cart toEntity(ShoppingCartDto dto);
+
+    @AfterMapping
+    default void setCartReferences(@MappingTarget Cart cart) {
+        if (cart != null && cart.getItems() != null) {
+            for (CartItem item : cart.getItems()) {
+                item.setCart(cart);
+            }
+        }
+    }
 
     default Cart toEntity(ShoppingCartDto dto, String username) {
         Cart cart = toEntity(dto);
