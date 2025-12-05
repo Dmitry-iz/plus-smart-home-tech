@@ -4,11 +4,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.entity.ScenarioAction;
 import ru.yandex.practicum.entity.ScenarioActionId;
 
 import java.util.List;
 
+@Repository
 public interface ScenarioActionRepository extends JpaRepository<ScenarioAction, ScenarioActionId> {
 
     List<ScenarioAction> findByIdScenarioId(Long scenarioId);
