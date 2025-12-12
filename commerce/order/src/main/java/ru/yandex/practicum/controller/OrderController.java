@@ -78,14 +78,4 @@ public class OrderController {
     public OrderDto assemblyFailed(@RequestBody UUID orderId) {
         return orderService.assemblyFailed(orderId);
     }
-
-    @PostMapping("/payment/success")
-    public OrderDto updatePaymentSuccess(@RequestBody UUID orderId) {
-        return orderService.updatePaymentSuccess(orderId);
-    }
-
-    @PostMapping("/delivery/success")
-    public OrderDto updateDeliverySuccess(@RequestBody UUID orderId) {
-        return orderService.updateDeliverySuccess(orderId);
-    }
 }

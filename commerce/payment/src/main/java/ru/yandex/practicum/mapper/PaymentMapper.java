@@ -14,18 +14,10 @@ public interface PaymentMapper {
     @Mapping(target = "feeTotal", source = "feeTotal")
     PaymentDto toDto(Payment payment);
 
-    default Payment toEntity(PaymentDto dto) {
-        if (dto == null) {
-            return null;
-        }
-
-        Payment payment = new Payment();
-        payment.setPaymentId(dto.getPaymentId());
-        payment.setTotalPayment(dto.getTotalPayment());
-        payment.setDeliveryTotal(dto.getDeliveryTotal());
-        payment.setFeeTotal(dto.getFeeTotal());
-        payment.setStatus(ru.yandex.practicum.dto.payment.PaymentStatus.PENDING);
-
-        return payment;
-    }
+    @Mapping(target = "paymentId", source = "paymentId")
+    @Mapping(target = "totalPayment", source = "totalPayment")
+    @Mapping(target = "deliveryTotal", source = "deliveryTotal")
+    @Mapping(target = "feeTotal", source = "feeTotal")
+    @Mapping(target = "status", ignore = true)
+    Payment toEntity(PaymentDto dto);
 }

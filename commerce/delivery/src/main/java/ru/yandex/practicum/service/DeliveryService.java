@@ -48,40 +48,6 @@ public class DeliveryService {
     }
 
     @Transactional
-    public void deliverySuccessful(UUID orderId) {
-        log.info("Processing successful delivery for order: {}", orderId);
-
-        Delivery delivery = deliveryRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new NoDeliveryFoundException());
-
-        delivery.setDeliveryState(DeliveryState.DELIVERED);
-        deliveryRepository.save(delivery);
-
-        orderServiceClient.delivery(orderId);
-
-        log.info("Delivery for order {} marked as DELIVERED", orderId);
-    }
-
-    @Transactional
-    public void deliveryPicked(UUID orderId) {
-        log.info("Processing picked delivery for order: {}", orderId);
-
-        Delivery delivery = deliveryRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new NoDeliveryFoundException());
-
-        delivery.setDeliveryState(DeliveryState.IN_PROGRESS);
-        deliveryRepository.save(delivery);
-
-        ShippedToDeliveryRequest request = new ShippedToDeliveryRequest(
-                orderId,
-                delivery.getDeliveryId()
-        );
-        warehouseDeliveryClient.shippedToDelivery(request);
-
-        log.info("Delivery for order {} marked as IN_PROGRESS and shipped to warehouse", orderId);
-    }
-
-    @Transactional
     public void deliveryFailed(UUID orderId) {
         log.info("Processing failed delivery for order: {}", orderId);
 
@@ -147,5 +113,47 @@ public class DeliveryService {
         }
 
         return result.setScale(2, java.math.RoundingMode.HALF_UP);
+    }
+
+    @Transactional
+    public void deliverySuccessful(UUID orderId) {
+        log.info("Processing successful delivery for order: {}", orderId);
+
+        Delivery delivery = deliveryRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new NoDeliveryFoundException());
+
+        delivery.setDeliveryState(DeliveryState.DELIVERED);
+        deliveryRepository.save(delivery);
+
+        try {
+            orderServiceClient.deliverySuccess(orderId);
+        } catch (Exception e) {
+            log.error("Failed to update order status for order {}: {}", orderId, e.getMessage());
+        }
+
+        log.info("Delivery for order {} marked as DELIVERED", orderId);
+    }
+
+    @Transactional
+    public void deliveryPicked(UUID orderId) {
+        log.info("Processing picked delivery for order: {}", orderId);
+
+        Delivery delivery = deliveryRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new NoDeliveryFoundException());
+
+        delivery.setDeliveryState(DeliveryState.IN_PROGRESS);
+        deliveryRepository.save(delivery);
+
+        try {
+            ShippedToDeliveryRequest request = new ShippedToDeliveryRequest();
+            request.setOrderId(orderId);
+            request.setDeliveryId(delivery.getDeliveryId());
+            warehouseDeliveryClient.shippedToDelivery(request);
+            log.info("Order {} shipped to delivery {}", orderId, delivery.getDeliveryId());
+        } catch (Exception e) {
+            log.error("Failed to update warehouse for order {}: {}", orderId, e.getMessage());
+        }
+
+        log.info("Delivery for order {} marked as IN_PROGRESS (picked)", orderId);
     }
 }

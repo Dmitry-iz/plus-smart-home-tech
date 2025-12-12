@@ -31,11 +31,6 @@ public class PaymentController {
         return paymentService.getTotalCost(orderDto);
     }
 
-    @PostMapping("/refund")
-    public void paymentSuccess(@RequestBody UUID paymentId) {
-        paymentService.paymentSuccess(paymentId);
-    }
-
     @PostMapping("/productCost")
     public BigDecimal productCost(@RequestBody OrderDto orderDto) {
         return paymentService.productCost(orderDto);
@@ -44,5 +39,10 @@ public class PaymentController {
     @PostMapping("/failed")
     public void paymentFailed(@RequestBody UUID paymentId) {
         paymentService.paymentFailed(paymentId);
+    }
+
+    @PostMapping("/refund")
+    public void paymentRefund(@RequestBody UUID paymentId) {
+        paymentService.paymentRefund(paymentId);
     }
 }

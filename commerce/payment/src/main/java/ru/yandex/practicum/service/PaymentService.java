@@ -77,21 +77,6 @@ public class PaymentService {
         return calculateTotalCost(productCost, deliveryCost);
     }
 
-    @Transactional
-    public void paymentSuccess(UUID paymentId) {
-        log.info("Processing successful payment for payment ID: {}", paymentId);
-
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new NoOrderFoundException(paymentId));
-
-        payment.setStatus(PaymentStatus.SUCCESS);
-        paymentRepository.save(payment);
-
-        orderPaymentClient.paymentSuccess(payment.getOrderId());
-
-        log.info("Payment {} marked as SUCCESS", paymentId);
-    }
-
     public BigDecimal productCost(OrderDto orderDto) {
         log.info("Calculating product cost for order: {}", orderDto.getOrderId());
 
@@ -178,5 +163,20 @@ public class PaymentService {
         if (orderDto.getProducts() == null || orderDto.getProducts().isEmpty()) {
             throw new NotEnoughInfoInOrderToCalculateException("Order products cannot be empty");
         }
+    }
+
+    @Transactional
+    public void paymentRefund(UUID paymentId) {
+        log.info("Processing payment refund for payment ID: {}", paymentId);
+
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new NoOrderFoundException(paymentId));
+
+        payment.setStatus(PaymentStatus.SUCCESS);
+        paymentRepository.save(payment);
+
+        orderPaymentClient.paymentSuccess(payment.getOrderId());
+
+        log.info("Payment {} refund processed as SUCCESS", paymentId);
     }
 }

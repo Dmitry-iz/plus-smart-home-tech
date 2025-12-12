@@ -10,6 +10,7 @@ import ru.yandex.practicum.dto.warehouse.AddressDto;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateNewOrderRequest {
+    private String username;  // ДОБАВЛЕНО: для связи заказа с пользователем (расширение спецификации)
     private ShoppingCartDto shoppingCart;
     private AddressDto deliveryAddress;
 }

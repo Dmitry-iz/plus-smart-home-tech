@@ -7,12 +7,12 @@ import ru.yandex.practicum.dto.order.OrderDto;
 
 import java.util.UUID;
 
-@FeignClient(name = "order",contextId = "paymentOrderClient", url = "${feign.client.order.url}")
+@FeignClient(name = "order")
 public interface OrderPaymentClient {
 
     @PostMapping("/api/v1/order/payment/failed")
     OrderDto paymentFailed(@RequestBody UUID orderId);
 
-    @PostMapping("/api/v1/order/payment")
+    @PostMapping("/api/v1/order/payment/success")
     OrderDto paymentSuccess(@RequestBody UUID orderId);
 }

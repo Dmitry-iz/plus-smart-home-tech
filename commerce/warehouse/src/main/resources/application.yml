@@ -1,6 +1,6 @@
 spring:
   application:
-    name: warehouse  # для каждого сервиса свое имя
+    name: warehouse
   config:
     import: "configserver:"
   cloud:

@@ -8,6 +8,8 @@ import ru.yandex.practicum.dto.warehouse.AddressDto;
 import ru.yandex.practicum.dto.warehouse.AssemblyProductsForOrderRequest;
 import ru.yandex.practicum.dto.warehouse.BookedProductsDto;
 
+import java.util.Map;
+
 @FeignClient(name = "warehouse", contextId = "orderWarehouseClient", url = "${feign.client.warehouse.url}")
 public interface WarehouseServiceClient {
 
@@ -17,4 +19,7 @@ public interface WarehouseServiceClient {
 
     @GetMapping("/api/v1/warehouse/address")
     AddressDto getWarehouseAddress();
+
+    @PostMapping("/api/v1/warehouse/return")
+    void acceptReturn(@RequestBody Map<String, Integer> products);
 }

@@ -3,6 +3,7 @@ CREATE SCHEMA IF NOT EXISTS order_schema;
 CREATE TABLE IF NOT EXISTS order_schema.orders (
     order_id UUID PRIMARY KEY,
     shopping_cart_id UUID,
+    username VARCHAR(255) NOT NULL,
     payment_id UUID,
     delivery_id UUID,
     state VARCHAR(50) NOT NULL,

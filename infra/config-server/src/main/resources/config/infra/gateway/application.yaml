@@ -3,69 +3,42 @@ spring:
     gateway:
       discovery.locator.enabled: true
       routes:
-        # Существующие роуты
+        # Shopping Cart
         - id: shopping_cart_service_route
-          uri: lb://shopping-cart
+          uri: lb://SHOPPING-CART
           predicates:
-            - Path=/shopping-cart/**
-          filters:
-            - PrefixPath=/api/v1
+            - Path=/api/v1/shopping-cart/**
 
+        # Shopping Store
         - id: shopping_store_service_route
-          uri: lb://shopping-store
+          uri: lb://SHOPPING-STORE
           predicates:
-            - Path=/shopping-store/**
-          filters:
-            - PrefixPath=/api/v1
-            - name: Retry
-              args:
-                retries: 3
-                statuses: NOT_FOUND
-                methods: GET,POST
+            - Path=/api/v1/shopping-store/**
 
+        # Warehouse
         - id: warehouse_service_route
-          uri: lb://warehouse
+          uri: lb://WAREHOUSE
           predicates:
-            - Path=/warehouse/**
-          filters:
-            - PrefixPath=/api/v1
+            - Path=/api/v1/warehouse/**
 
-        # Новые роуты для сервисов из ТЗ
-        - id: order_service_route
-          uri: lb://order
+        # Order
+        - id: order_service_main_route
+          uri: lb://ORDER
           predicates:
-            - Path=/order/**
-          filters:
-            - PrefixPath=/api/v1
-            - name: Retry
-              args:
-                retries: 3
-                statuses: NOT_FOUND
-                methods: GET,POST,PUT
+            - Path=/api/v1/order/**
+          # НИКАКИХ filters!
 
+        # Payment
         - id: payment_service_route
-          uri: lb://payment
+          uri: lb://PAYMENT
           predicates:
-            - Path=/payment/**
-          filters:
-            - PrefixPath=/api/v1
-            - name: Retry
-              args:
-                retries: 3
-                statuses: NOT_FOUND
-                methods: GET,POST
+            - Path=/api/v1/payment/**
 
+        # Delivery
         - id: delivery_service_route
-          uri: lb://delivery
+          uri: lb://DELIVERY
           predicates:
-            - Path=/delivery/**
-          filters:
-            - PrefixPath=/api/v1
-            - name: Retry
-              args:
-                retries: 3
-                statuses: NOT_FOUND
-                methods: GET,POST,PUT
+            - Path=/api/v1/delivery/**
 
 server:
   port: 8080

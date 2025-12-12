@@ -32,7 +32,7 @@ public class Payment {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PaymentStatus status = PaymentStatus.PENDING; // ДОЛЖЕН БЫТЬ
+    private PaymentStatus status = PaymentStatus.PENDING;
 
     @Column(precision = 10, scale = 2)
     private BigDecimal totalPayment;

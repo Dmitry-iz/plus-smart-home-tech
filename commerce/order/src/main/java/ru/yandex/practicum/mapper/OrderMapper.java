@@ -15,26 +15,32 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring", uses = UUIDMapper.class)
+@Mapper(componentModel = "spring")
 public interface OrderMapper {
 
     @Mapping(target = "products", source = "items", qualifiedByName = "mapItemsToProducts")
+    @Mapping(target = "username", source = "username")
+
     OrderDto toDto(Order order);
 
     @Mapping(target = "items", source = "products", qualifiedByName = "mapProductsToItems")
-    @Mapping(target = "shoppingCartId", ignore = true)
-    @Mapping(target = "paymentId", ignore = true)
-    @Mapping(target = "deliveryId", ignore = true)
+    @Mapping(target = "username", source = "username")
+
     Order toEntity(OrderDto dto);
 
     default Order toEntityFromRequest(CreateNewOrderRequest request) {
-        if (request == null || request.getShoppingCart() == null) {
+        if (request == null) {
             return null;
         }
 
         Order order = new Order();
         order.setShoppingCartId(request.getShoppingCart().getShoppingCartId());
+        order.setUsername(request.getUsername());
         order.setState(ru.yandex.practicum.dto.order.OrderState.NEW);
+
+        if (request.getShoppingCart() != null && request.getShoppingCart().getProducts() != null) {
+            order.setItems(mapProductsToItems(request.getShoppingCart().getProducts()));
+        }
 
         return order;
     }
@@ -70,11 +76,16 @@ public interface OrderMapper {
 
         return products.entrySet().stream()
                 .map(entry -> {
-                    OrderItem item = new OrderItem();
-                    item.setProductId(UUID.fromString(entry.getKey()));
-                    item.setQuantity(entry.getValue());
-                    return item;
+                    try {
+                        OrderItem item = new OrderItem();
+                        item.setProductId(UUID.fromString(entry.getKey()));
+                        item.setQuantity(entry.getValue());
+                        return item;
+                    } catch (IllegalArgumentException e) {
+                        return null;
+                    }
                 })
+                .filter(item -> item != null)
                 .collect(Collectors.toList());
     }
 }

@@ -3,14 +3,22 @@ package ru.yandex.practicum.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import ru.yandex.practicum.dto.delivery.DeliveryDto;
-import ru.yandex.practicum.dto.warehouse.AddressDto;
+import ru.yandex.practicum.dto.delivery.DeliveryState;
 import ru.yandex.practicum.entity.Delivery;
 
 @Mapper(componentModel = "spring")
 public interface DeliveryMapper {
 
-    @Mapping(target = "fromAddress", expression = "java(mapToAddressDto(delivery, true))")
-    @Mapping(target = "toAddress", expression = "java(mapToAddressDto(delivery, false))")
+    @Mapping(target = "fromAddress.country", source = "fromCountry")
+    @Mapping(target = "fromAddress.city", source = "fromCity")
+    @Mapping(target = "fromAddress.street", source = "fromStreet")
+    @Mapping(target = "fromAddress.house", source = "fromHouse")
+    @Mapping(target = "fromAddress.flat", source = "fromFlat")
+    @Mapping(target = "toAddress.country", source = "toCountry")
+    @Mapping(target = "toAddress.city", source = "toCity")
+    @Mapping(target = "toAddress.street", source = "toStreet")
+    @Mapping(target = "toAddress.house", source = "toHouse")
+    @Mapping(target = "toAddress.flat", source = "toFlat")
     DeliveryDto toDto(Delivery delivery);
 
     @Mapping(target = "fromCountry", source = "fromAddress.country")
@@ -23,27 +31,14 @@ public interface DeliveryMapper {
     @Mapping(target = "toStreet", source = "toAddress.street")
     @Mapping(target = "toHouse", source = "toAddress.house")
     @Mapping(target = "toFlat", source = "toAddress.flat")
+    @Mapping(target = "deliveryState", source = "deliveryState")
     Delivery toEntity(DeliveryDto dto);
 
-    default AddressDto mapToAddressDto(Delivery delivery, boolean isFrom) {
-        if (delivery == null) {
-            return null;
-        }
+    default DeliveryState map(String value) {
+        return value != null ? DeliveryState.valueOf(value) : DeliveryState.CREATED;
+    }
 
-        AddressDto addressDto = new AddressDto();
-        if (isFrom) {
-            addressDto.setCountry(delivery.getFromCountry());
-            addressDto.setCity(delivery.getFromCity());
-            addressDto.setStreet(delivery.getFromStreet());
-            addressDto.setHouse(delivery.getFromHouse());
-            addressDto.setFlat(delivery.getFromFlat());
-        } else {
-            addressDto.setCountry(delivery.getToCountry());
-            addressDto.setCity(delivery.getToCity());
-            addressDto.setStreet(delivery.getToStreet());
-            addressDto.setHouse(delivery.getToHouse());
-            addressDto.setFlat(delivery.getToFlat());
-        }
-        return addressDto;
+    default String map(DeliveryState value) {
+        return value != null ? value.name() : DeliveryState.CREATED.name();
     }
 }
