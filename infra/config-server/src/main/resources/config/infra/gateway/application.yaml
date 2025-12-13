@@ -1,7 +1,7 @@
 spring:
   cloud:
     gateway:
-      discovery.locator.enabled: true
+      discovery.locator.enabled: false
       routes:
         # Shopping Cart
         - id: shopping_cart_service_route
@@ -26,7 +26,7 @@ spring:
           uri: lb://ORDER
           predicates:
             - Path=/api/v1/order/**
-          # НИКАКИХ filters!
+
 
         # Payment
         - id: payment_service_route
@@ -49,3 +49,13 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
   instance:
     preferIpAddress: true
+
+#  Активация actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,routes,routefilters
+  endpoint:
+    gateway:
+      enabled: true

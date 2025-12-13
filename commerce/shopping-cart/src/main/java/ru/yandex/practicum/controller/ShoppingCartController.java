@@ -15,7 +15,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/shopping-cart")
-public class ShoppingCartController {  // УБРАТЬ implements ShoppingCartClient
+public class ShoppingCartController {
 
     private final CartService cartService;
 
