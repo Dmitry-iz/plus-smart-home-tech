@@ -69,6 +69,10 @@ services:
         PGPASSWORD=postgres psql -h postgres -U postgres -d analyzer -c 'CREATE SCHEMA IF NOT EXISTS shopping_cart;'
         PGPASSWORD=postgres psql -h postgres -U postgres -d analyzer -c 'CREATE SCHEMA IF NOT EXISTS warehouse;'
         echo 'All commerce schemas created successfully'
+        PGPASSWORD=postgres psql -h postgres -U postgres -d analyzer -c 'CREATE SCHEMA IF NOT EXISTS order_schema;'
+        PGPASSWORD=postgres psql -h postgres -U postgres -d analyzer -c 'CREATE SCHEMA IF NOT EXISTS payment_schema;'
+        PGPASSWORD=postgres psql -h postgres -U postgres -d analyzer -c 'CREATE SCHEMA IF NOT EXISTS delivery_schema;'
+        echo 'All commerce schemas created successfully'
       "
     restart: on-failure
 

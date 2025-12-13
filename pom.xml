@@ -20,6 +20,11 @@
         <module>commerce</module>
         <module>infra/config-server</module>
         <module>discovery-server</module>
+        <module>infra/gateway</module>
+        <!-- УДАЛИТЬ эти строки: -->
+        <!-- <module>commerce/payment</module> -->
+        <!-- <module>commerce/delivery</module> -->
+        <!-- <module>commerce/order</module> -->
     </modules>
 
     <properties>
